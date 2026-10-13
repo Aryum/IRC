@@ -2,17 +2,23 @@
 
 placeholder::placeholder()
 {
-	_func["PASS"] = &placeholder::cmd_PASS;
-	_func["NICK"] = &placeholder::cmd_NICK;
-	_func["USER"] = &placeholder::cmd_USER;
-	_func["QUIT"] = &placeholder::cmd_QUIT;
-	_func["JOIN"] = &placeholder::cmd_JOIN;
-	_func["KICK"] = &placeholder::cmd_KICK;
-	_func["INVITE"] = &placeholder::cmd_INVITE;
-	_func["TOPIC"] = &placeholder::cmd_TOPIC;
-	_func["MODE"] = &placeholder::cmd_MODE;
+	createMap();
 }
 
+void placeholder::createMap()
+{
+	_cmd["PASS"] = &placeholder::cmd_PASS;
+	_cmd["NICK"] = &placeholder::cmd_NICK;
+	_cmd["USER"] = &placeholder::cmd_USER;
+	_cmd["QUIT"] = &placeholder::cmd_QUIT;
+	_cmd["JOIN"] = &placeholder::cmd_JOIN;
+	_cmd["KICK"] = &placeholder::cmd_KICK;
+	_cmd["INVITE"] = &placeholder::cmd_INVITE;
+	_cmd["TOPIC"] = &placeholder::cmd_TOPIC;
+	_cmd["MODE"] = &placeholder::cmd_MODE;
+
+
+}
 std::string nextSpace(std::string &input, size_t &idx, bool prefix)
 {
 	size_t curIdx;
@@ -76,8 +82,8 @@ void placeholder::call_cmd(std::string input)
 	for (size_t h = 0; h < params.size(); h++)
 		std::cout << "	" << params[h] << "\n";
 	return;
-	funcIt it = _func.find(command);
-	if (it == _func.end())
+	funcIt it = _cmd.find(command);
+	if (it == _cmd.end())
 		throw std::runtime_error(command + "  not found"); //its not a runtime error btw
 	(this->*(it->second))(params);
 }

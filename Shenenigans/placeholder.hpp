@@ -7,19 +7,22 @@
 
 class placeholder;
 
-typedef std::map<std::string, void (placeholder::*)(std::vector<std::string>)> funcMap;
-typedef funcMap::iterator funcIt;
+typedef std::map<std::string, void (placeholder::*)(std::vector<std::string>)> cmdMap;
+typedef std::map<int, void (placeholder::*)()> rplMap;
+
+typedef cmdMap::iterator funcIt;
 
 class placeholder
 {
 	public:
 		placeholder();
 		void call_cmd(std::string input);
-		void send_msg(std::string input);
 
 	private:
-		funcMap _func;
-
+		cmdMap _cmd;
+		rplMap _rpl;
+		
+		void createMap();
 		void cmd_PASS(std::vector<std::string> args);
 		void cmd_NICK(std::vector<std::string> args);
 		void cmd_USER(std::vector<std::string> args);
