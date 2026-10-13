@@ -1,5 +1,5 @@
 #include "placeholder.hpp"
-void placeholder::cmd_PASS()
+void placeholder::cmd_PASS(std::vector<std::string> args)
 {
 	/*
 
@@ -25,7 +25,7 @@ void placeholder::cmd_PASS()
 	*/
 }
 
-void placeholder::cmd_NICK()
+void placeholder::cmd_NICK(std::vector<std::string> args)
 {
 	/*
 	Command: NICK
@@ -60,7 +60,7 @@ void placeholder::cmd_NICK()
 	
 	*/
 }
-void placeholder::cmd_USER()
+void placeholder::cmd_USER(std::vector<std::string> args)
 {
 	/*
 	 Command: USER
@@ -112,7 +112,7 @@ void placeholder::cmd_USER()
 
 
 
-void placeholder::cmd_QUIT()
+void placeholder::cmd_QUIT(std::vector<std::string> args)
 {
 	/*
 	 Command: QUIT
@@ -144,7 +144,7 @@ void placeholder::cmd_QUIT()
    QUIT :Gone to have lunch        ; Preferred message format.
 	*/
 }
-void placeholder::cmd_JOIN()
+void placeholder::cmd_JOIN(std::vector<std::string> args)
 {
 	/*
 	   Command: JOIN
@@ -202,7 +202,7 @@ void placeholder::cmd_JOIN()
 	*/
 }
 
-void placeholder::cmd_PART()
+void placeholder::cmd_PART(std::vector<std::string> args)
 {
 	/*
 	Command: PART
@@ -224,7 +224,7 @@ void placeholder::cmd_PART()
                                    "#oz-ops".
 	*/
 }
-void placeholder::cmd_KICK()
+void placeholder::cmd_KICK(std::vector<std::string> args)
 {
 	/*
 		Command: KICK
@@ -263,7 +263,7 @@ following:
 	*/
 }
 
-void placeholder::cmd_INVITE()
+void placeholder::cmd_INVITE(std::vector<std::string> args)
 {
 	/*
 		Command: INVITE
@@ -294,7 +294,7 @@ void placeholder::cmd_INVITE()
 	
 	*/
 }
-void placeholder::cmd_TOPIC()
+void placeholder::cmd_TOPIC(std::vector<std::string> args)
 {
 	/*
 		Command: TOPIC
@@ -320,7 +320,7 @@ void placeholder::cmd_TOPIC()
    TOPIC #test                     ; check the topic for #test.
 	*/
 }
-void placeholder::cmd_MODE()
+void placeholder::cmd_MODE(std::vector<std::string> args)
 {
 	/*
 		Command: MODE
@@ -437,7 +437,7 @@ MODE WiZ -o                     ; WiZ 'deopping' (removing operator
 
 }
 
-void placeholder::cmd_LIST()
+void placeholder::cmd_LIST(std::vector<std::string> args)
 {
 	/*
 	Command: LIST
@@ -462,7 +462,7 @@ void placeholder::cmd_LIST()
    LIST #twilight_zone,#42         ; List channels #twilight_zone and #42
 	*/
 }
-void placeholder::cmd_NAMES()
+void placeholder::cmd_NAMES(std::vector<std::string> args)
 {
 	/*
 	 Command: NAMES

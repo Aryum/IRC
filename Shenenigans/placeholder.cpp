@@ -1,0 +1,83 @@
+#include "placeholder.hpp"
+
+placeholder::placeholder()
+{
+	_func["PASS"] = &placeholder::cmd_PASS;
+	_func["NICK"] = &placeholder::cmd_NICK;
+	_func["USER"] = &placeholder::cmd_USER;
+	_func["QUIT"] = &placeholder::cmd_QUIT;
+	_func["JOIN"] = &placeholder::cmd_JOIN;
+	_func["KICK"] = &placeholder::cmd_KICK;
+	_func["INVITE"] = &placeholder::cmd_INVITE;
+	_func["TOPIC"] = &placeholder::cmd_TOPIC;
+	_func["MODE"] = &placeholder::cmd_MODE;
+}
+
+std::string nextSpace(std::string &input, size_t &idx, bool prefix)
+{
+	size_t curIdx;
+	std::string ret;
+	if (!prefix && input[0] == ':')
+		curIdx = std::string::npos;
+	else
+		curIdx = input.find(' ', idx);
+
+	if (curIdx == std::string::npos)
+		ret = input.substr(idx);
+	else
+	{
+		ret = input.substr(idx, curIdx - idx);
+		while (input[curIdx + 1] == ' ')
+			curIdx++;
+	}
+	idx = curIdx + (curIdx != std::string::npos);
+	return ret;
+}
+/*
+	rememeber to respond to CAP LS
+
+*/
+void placeholder::call_cmd(std::string input)
+{
+	size_t spaceIdx = 0;
+	std::string command = "";
+	std::vector<std::string> params;
+	int i = 0;
+	bool prefix = false;
+	while (spaceIdx != std::string::npos)
+	{
+		i++;
+		std::string token = nextSpace(input, spaceIdx, prefix);
+		if (i == 1 && token[0] == '@')
+		{
+			std::cout << "ignoring tag\n";
+			continue;
+		}
+
+		if (token[0] ==  ':')
+		{
+			if (!prefix)
+			{
+				std::cout << "ignoring source\n";
+				prefix = true;
+				continue;
+			}
+			else
+				token.erase(0);
+		}
+			
+		if (command.empty())
+			command = token;
+		else if (!token.empty())
+			params.push_back(token);
+	}
+	std::cout << "Command " << command << "\n";
+	std::cout << "Param " << "\n";
+	for (size_t h = 0; h < params.size(); h++)
+		std::cout << "	" << params[h] << "\n";
+	return;
+	funcIt it = _func.find(command);
+	if (it == _func.end())
+		throw std::runtime_error(command + "  not found"); //its not a runtime error btw
+	(this->*(it->second))(params);
+}
