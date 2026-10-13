@@ -71,7 +71,7 @@ bool Client::hasCompleteLine() const
     return inputBuffer.find("\r\n") != std::string::npos; 
 }
 
-std::string Client::extractLine() // Extracts the next complete IRC line from the input buffer and returns it without the line ending.
+std::string Client::extractLine() 
 {
     std::string::size_type pos = inputBuffer.find("\r\n"); 
 
