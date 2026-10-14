@@ -16,10 +16,10 @@
 
 
 class placeholder;
-typedef std::map<std::string, void (placeholder::*)(Client &client, std::vector<std::string>)> cmdMap;
-typedef std::map<int, void (placeholder::*)()> rplMap;
+typedef std::vector<std::string> Args;
+typedef std::map<std::string, void (placeholder::*)(Client &client, Args)> CmdMap;
+typedef std::map<int, void (placeholder::*)()> ReplyMap;
 typedef std::map<int, Client*> clientMap;
-typedef cmdMap::iterator funcIt;
 
 class placeholder
 {
@@ -33,24 +33,30 @@ class placeholder
 		std::vector<pollfd> _sockets; //client + server
 		clientMap _clients;
 		std::vector<Channel> _channels;
-		cmdMap _cmd;
-		rplMap _rpl;
+		CmdMap _cmd;
+		ReplyMap _rpl;
 		
 		void createMap();
-		void cmd_PASS(Client &client, std::vector<std::string> args);
-		void cmd_NICK(Client &client, std::vector<std::string> args);
-		void cmd_USER(Client &client, std::vector<std::string> args);
-		void cmd_PART(Client &client, std::vector<std::string> args);
-		void cmd_LIST(Client &client, std::vector<std::string> args);
-		void cmd_QUIT(Client &client, std::vector<std::string> args);
-		void cmd_JOIN(Client &client, std::vector<std::string> args);
-		void cmd_KICK(Client &client, std::vector<std::string> args);
-		void cmd_INVITE(Client &client, std::vector<std::string> args);
-		void cmd_TOPIC(Client &client, std::vector<std::string> args);
-		void cmd_MODE(Client &client, std::vector<std::string> args);
-		void cmd_NAMES(Client &client, std::vector<std::string> args);
+		void cmd_PASS(Client &client, Args args);
+		void cmd_NICK(Client &client, Args args);
+		void cmd_USER(Client &client, Args args);
+		void cmd_PART(Client &client, Args args);
+		void cmd_LIST(Client &client, Args args);
+		void cmd_QUIT(Client &client, Args args);
+		void cmd_JOIN(Client &client, Args args);
+		void cmd_KICK(Client &client, Args args);
+		void cmd_INVITE(Client &client, Args args);
+		void cmd_TOPIC(Client &client, Args args);
+		void cmd_MODE(Client &client, Args args);
+
+
+		//move to its own helper file, it contains all the system headers as well
+		void placeholder::iterateChannels(bool (*func)(Channel &, Args), Args args);
+		void placeholder::iterateChannels(bool (*func)(Channel &));
 };
 
+//move to its own helper file, it contains all the system headers as well
+std::string nextChar(std::string &input, size_t &idx, char c, bool prefix);
 
 #endif
 

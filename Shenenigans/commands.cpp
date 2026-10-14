@@ -1,7 +1,7 @@
 #include "placeholder.hpp"
-void placeholder::cmd_PASS(Client &client, std::vector<std::string> args)
+void placeholder::cmd_PASS(Client &client, Args args)
 {
-	if (_clients.find(client.get_Socket()) != _clients.end())
+	if (_clients.find(client.getSocket()) != _clients.end())
 		return ; //ERR_ALREADYREGISTRED
 	if (args.size() == 0)
 		return ; //ERR_NEEDMOREPARAMS
@@ -32,7 +32,7 @@ void placeholder::cmd_PASS(Client &client, std::vector<std::string> args)
 	*/
 }
 
-void placeholder::cmd_NICK(Client &client, std::vector<std::string> args)
+void placeholder::cmd_NICK(Client &client, Args args)
 {
 	if (args.size() == 0)
 		return ; //ERR_NONICKNAMEGIVEN
@@ -41,9 +41,9 @@ void placeholder::cmd_NICK(Client &client, std::vector<std::string> args)
 	bool newConnection = false;
 	while (it != _clients.end())
 	{
-		if (it->first == client.get_Socket())
+		if (it->first == client.getSocket())
 			newConnection = false;
-		if (it->second->get_UserName() == args[0])
+		if (it->second->getUserName() == args[0])
 			return ; //ERR_NICKCOLLISION
 		it++;
 	}
@@ -85,19 +85,19 @@ void placeholder::cmd_NICK(Client &client, std::vector<std::string> args)
 	
 	*/
 }
-void placeholder::cmd_USER(Client &client, std::vector<std::string> args)
+void placeholder::cmd_USER(Client &client, Args args)
 {
 	if (args.size() < 4)
 		return ; //ERR_NEEDMOREPARAMS
 	clientMap::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		if (it->first == client.get_Socket())
+		if (it->first == client.getSocket())
 			return ; //ERR_ALREADYREGISTRED
 		it++;
 	}
-	client.set_Names(args[0], args[1], args[2], args[3]);
-	_clients.insert(std::make_pair(client.get_Socket(), &client));
+	client.setNames(args[0], args[1], args[2], args[3]);
+	_clients.insert(std::make_pair(client.getSocket(), &client));
 	//actually add to client list at the end of this cmd
 	/*
 	 Command: USER
@@ -149,9 +149,9 @@ void placeholder::cmd_USER(Client &client, std::vector<std::string> args)
 
 
 
-void placeholder::cmd_QUIT(Client &client, std::vector<std::string> args)
+void placeholder::cmd_QUIT(Client &client, Args args)
 {
-	_clients.erase(client.get_Socket());
+	_clients.erase(client.getSocket());
 	std::string reason;
 	if (args.size() != 0)
 		reason = args[0];
@@ -200,8 +200,37 @@ void placeholder::cmd_QUIT(Client &client, std::vector<std::string> args)
    QUIT :Gone to have lunch        ; Preferred message format.
 	*/
 }
-void placeholder::cmd_JOIN(Client &client, std::vector<std::string> args)
+
+void placeholder::cmd_JOIN(Client &client, Args args)
 {
+	if (args.size() < 1)
+		return ; //ERR_NEEDMOREPARAMS
+	size_t channelIdx = 0;
+	size_t keyIdx = 0;
+
+	while (channelIdx != std::string::npos)
+	{
+		std::string name = nextChar(args[0], channelIdx, ',', true);
+		std::string password = nextChar(args[0], channelIdx, ',', true);
+		bool foundChannel = false;
+
+		std::vector<Channel>::iterator it = _channels.begin();
+		//move to channel reutrn a reply, use iterate channel function
+		while (it != _channels.end())
+		{
+			if (it->getName() == name)
+			{
+				std::string reply = it->addClient(client, password);
+				foundChannel = true;
+				break;
+			}
+			it++;
+		}
+		if (!foundChannel)
+		{
+			//send ERR_NOSUCHCHANNEL
+		}
+	}
 	/*
 	   Command: JOIN
    Parameters: <channel>{,<channel>} [<key>{,<key>}]
@@ -258,8 +287,33 @@ void placeholder::cmd_JOIN(Client &client, std::vector<std::string> args)
 	*/
 }
 
-void placeholder::cmd_PART(Client &client, std::vector<std::string> args)
+
+void placeholder::cmd_PART(Client &client, Args args)
 {
+	if (args.size() < 1)
+		return ; //ERR_NEEDMOREPARAMS
+	size_t channelIdx = 0;
+	bool foundChannel = false;
+	while (channelIdx != std::string::npos)
+	{
+		std::string name = nextChar(args[0], channelIdx, ',', true);
+		std::vector<Channel>::iterator it = _channels.begin();
+
+		while (it != _channels.end())
+		{
+			if (it->getName() == name)
+			{
+				std::string reply = it->removeClient(client);
+				foundChannel = true;
+				break;
+			}
+			it++;
+		}
+		if (!foundChannel)
+		{
+			//send ERR_NOSUCHCHANNEL
+		}
+	}
 	/*
 	Command: PART
    Parameters: <channel>{,<channel>}
@@ -280,7 +334,7 @@ void placeholder::cmd_PART(Client &client, std::vector<std::string> args)
                                    "#oz-ops".
 	*/
 }
-void placeholder::cmd_KICK(Client &client, std::vector<std::string> args)
+void placeholder::cmd_KICK(Client &client, Args args)
 {
 	/*
 		Command: KICK
@@ -319,7 +373,7 @@ following:
 	*/
 }
 
-void placeholder::cmd_INVITE(Client &client, std::vector<std::string> args)
+void placeholder::cmd_INVITE(Client &client, Args args)
 {
 	/*
 		Command: INVITE
@@ -350,7 +404,7 @@ void placeholder::cmd_INVITE(Client &client, std::vector<std::string> args)
 	
 	*/
 }
-void placeholder::cmd_TOPIC(Client &client, std::vector<std::string> args)
+void placeholder::cmd_TOPIC(Client &client, Args args)
 {
 	/*
 		Command: TOPIC
@@ -376,7 +430,7 @@ void placeholder::cmd_TOPIC(Client &client, std::vector<std::string> args)
    TOPIC #test                     ; check the topic for #test.
 	*/
 }
-void placeholder::cmd_MODE(Client &client, std::vector<std::string> args)
+void placeholder::cmd_MODE(Client &client, Args args)
 {
 	/*
 		Command: MODE
@@ -493,7 +547,7 @@ MODE WiZ -o                     ; WiZ 'deopping' (removing operator
 
 }
 
-void placeholder::cmd_LIST(Client &client, std::vector<std::string> args)
+void placeholder::cmd_LIST(Client &client, Args args)
 {
 	/*
 	Command: LIST
@@ -516,36 +570,5 @@ void placeholder::cmd_LIST(Client &client, std::vector<std::string> args)
    LIST                            ; List all channels.
 
    LIST #twilight_zone,#42         ; List channels #twilight_zone and #42
-	*/
-}
-void placeholder::cmd_NAMES(Client &client, std::vector<std::string> args)
-{
-	/*
-	 Command: NAMES
-   Parameters: [<channel>{,<channel>}]
-
-   By using the NAMES command, a user can list all nicknames that are
-   visible to them on any channel that they can see.  Channel names
-   which they can see are those which aren't private (+p) or secret (+s)
-   or those which they are actually on.  The <channel> parameter
-   specifies which channel(s) to return information about if valid.
-   There is no error reply for bad channel names.
-
-   If no <channel> parameter is given, a list of all channels and their
-   occupants is returned.  At the end of this list, a list of users who
-   are visible but either not on any channel or not on a visible channel
-   are listed as being on `channel' "*".
-
-   Numerics:
-
-           RPL_NAMREPLY                    RPL_ENDOFNAMES
-
-   Examples:
-
-   NAMES #twilight_zone,#42        ; list visible users on #twilight_zone
-                                   and #42 if the channels are visible to
-                                   you.
-
-   NAMES                           ; list all visible channels and users
 	*/
 }

@@ -19,26 +19,8 @@ void placeholder::createMap()
 
 
 }
-std::string nextSpace(std::string &input, size_t &idx, bool prefix)
-{
-	size_t curIdx;
-	std::string ret;
-	if (!prefix && input[0] == ':')
-		curIdx = std::string::npos;
-	else
-		curIdx = input.find(' ', idx);
 
-	if (curIdx == std::string::npos)
-		ret = input.substr(idx);
-	else
-	{
-		ret = input.substr(idx, curIdx - idx);
-		while (input[curIdx + 1] == ' ')
-			curIdx++;
-	}
-	idx = curIdx + (curIdx != std::string::npos);
-	return ret;
-}
+
 
 void placeholder::call_cmd(Client &client, std::string input)
 {
@@ -50,7 +32,7 @@ void placeholder::call_cmd(Client &client, std::string input)
 	while (spaceIdx != std::string::npos)
 	{
 		i++;
-		std::string token = nextSpace(input, spaceIdx, prefix);
+		std::string token = nextChar(input, spaceIdx, ' ', prefix);
 		if (i == 1 && token[0] == '@')
 		{
 			std::cout << "ignoring tag\n";
@@ -79,7 +61,7 @@ void placeholder::call_cmd(Client &client, std::string input)
 	for (size_t h = 0; h < params.size(); h++)
 		std::cout << "	" << params[h] << "\n";
 	return;
-	funcIt it = _cmd.find(command);
+	CmdMap::iterator it = _cmd.find(command);
 	if (it == _cmd.end())
 		throw std::runtime_error(command + "  not found"); //its not a runtime error btw
 	(this->*(it->second))(client, params);
