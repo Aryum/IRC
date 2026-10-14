@@ -212,24 +212,14 @@ void placeholder::cmd_JOIN(Client &client, Args args)
 	{
 		std::string name = nextChar(args[0], channelIdx, ',', true);
 		std::string password = nextChar(args[0], channelIdx, ',', true);
-		bool foundChannel = false;
 
-		std::vector<Channel>::iterator it = _channels.begin();
-		//move to channel reutrn a reply, use iterate channel function
-		while (it != _channels.end())
-		{
-			if (it->getName() == name)
-			{
-				std::string reply = it->addClient(client, password);
-				foundChannel = true;
-				break;
-			}
-			it++;
-		}
-		if (!foundChannel)
-		{
-			//send ERR_NOSUCHCHANNEL
-		}
+		std::vector<Channel>::iterator it = getChannel(name);
+		std::string reply;
+		if (it == _channels.end())
+			return ; //reçly ==  ERR_NOSUCHCHANNEL
+		else
+			reply = it->addClient(client, password);
+		
 	}
 	/*
 	   Command: JOIN
@@ -297,22 +287,12 @@ void placeholder::cmd_PART(Client &client, Args args)
 	while (channelIdx != std::string::npos)
 	{
 		std::string name = nextChar(args[0], channelIdx, ',', true);
-		std::vector<Channel>::iterator it = _channels.begin();
-
-		while (it != _channels.end())
-		{
-			if (it->getName() == name)
-			{
-				std::string reply = it->removeClient(client);
-				foundChannel = true;
-				break;
-			}
-			it++;
-		}
-		if (!foundChannel)
-		{
-			//send ERR_NOSUCHCHANNEL
-		}
+		std::vector<Channel>::iterator it = getChannel(name);
+		std::string reply;
+		if (it == _channels.end())
+			return ; //reçly ==  ERR_NOSUCHCHANNEL
+		else
+			reply = it->removeClient(client);
 	}
 	/*
 	Command: PART

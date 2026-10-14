@@ -21,3 +21,16 @@ std::string nextChar(std::string &input, size_t &idx, char c, bool prefix)
 	idx = curIdx + (curIdx != std::string::npos);
 	return ret;
 }
+
+std::vector<Channel>::iterator placeholder::getChannel(std::string name)
+{
+	std::vector<Channel>::iterator it = _channels.begin();
+
+	while (it != _channels.end())
+	{
+		if (it->getName() == name)
+			break;
+		it++;
+	}
+	return it;
+}

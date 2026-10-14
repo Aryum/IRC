@@ -51,8 +51,7 @@ class placeholder
 
 
 		//move to its own helper file, it contains all the system headers as well
-		void placeholder::iterateChannels(bool (*func)(Channel &, Args), Args args);
-		void placeholder::iterateChannels(bool (*func)(Channel &));
+		std::vector<Channel>::iterator getChannel(std::string name);
 };
 
 //move to its own helper file, it contains all the system headers as well
