@@ -14,6 +14,7 @@ class Client
 		void setNames(std::string user, std::string host, std::string server, std::string real);
 		std::string getUserName();
 
+
 	private:
 		std::string _userName;
 		std::string _hostName;
@@ -21,6 +22,5 @@ class Client
 		std::string _realName;
 		std::string _password;
 		int _socket;
-		bool _isOperator;
 };
 #endif

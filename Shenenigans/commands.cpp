@@ -162,9 +162,15 @@ void placeholder::cmd_QUIT(Client &client, Args args)
 	{
 		if (it->hasClient(client))
 		{
+			//shit will need fixing
+			//shit will need fixing
+			//shit will need fixing
+			//shit will need fixing
+			//shit will need fixing
+			//shit will need fixing
 			//broadcast message
 			it->broadcastMessage(reason); //will need formating
-			it->removeClient(client);
+			it->partClient(client);
 		}
 		it++;
 	}
@@ -218,7 +224,7 @@ void placeholder::cmd_JOIN(Client &client, Args args)
 		if (it == _channels.end())
 			return ; //reçly ==  ERR_NOSUCHCHANNEL
 		else
-			reply = it->addClient(client, password);
+			reply = it->joinClient(client, password);
 		
 	}
 	/*
@@ -292,7 +298,8 @@ void placeholder::cmd_PART(Client &client, Args args)
 		if (it == _channels.end())
 			return ; //reçly ==  ERR_NOSUCHCHANNEL
 		else
-			reply = it->removeClient(client);
+			reply = it->partClient(client);
+		//send reply
 	}
 	/*
 	Command: PART
@@ -316,6 +323,41 @@ void placeholder::cmd_PART(Client &client, Args args)
 }
 void placeholder::cmd_KICK(Client &client, Args args)
 {
+	if (args.size() < 2)
+		return ; //ERR_NEEDMOREPARAMS
+	std::vector<Channel>::iterator it = getChannel(args[0]);
+	if (it == _channels.end())
+		return ; //ERR_NOSUCHCHANNEL
+	if (it->isOperator(client))
+		return ; //ERR_CHANOPRIVSNEEDED
+	it->kickClient(client, args[0], args.size() >= 3 ? args[2] : "");
+
+	size_t channelIdx = 0;
+	size_t userIdx = 0;
+	bool foundChannel = false;
+	while (channelIdx != std::string::npos)
+	{
+		std::string channel = nextChar(args[0], channelIdx, ',', true);
+		std::string user = nextChar(args[1], userIdx, ',', true);
+
+		std::vector<Channel>::iterator it = getChannel(channel);
+		std::string reply;
+		
+		if (it == _channels.end())
+			return ; //reçly ==  ERR_NOSUCHCHANNEL
+		if (userIdx == std::string::npos && user == "")
+			break;
+		reply = it->kickClient(client, user, args.size() >= 3 ? args[2] : "");
+		//send reply
+	}
+	/*
+NOTE:
+     It is possible to extend the KICK command parameters to the
+following:
+
+<channel>{,<channel>} <user>{,<user>} [<comment>]
+	*/
+
 	/*
 		Command: KICK
    Parameters: <channel> <user> [<comment>]

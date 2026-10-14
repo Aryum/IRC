@@ -5,6 +5,15 @@
 #include "Client.hpp"
 #include "placeholder.hpp"
 
+enum ClientStatus
+{
+	Connected,
+	Banned,
+	Op,
+	None
+};
+
+
 class Channel
 {
 	public:
@@ -14,10 +23,11 @@ class Channel
 		std::string  getName();
 
 		//returns reply
-		std::string addClient(Client &client, std::string password);
-		std::string removeClient(Client &client);
-
+		std::string joinClient(Client &client, std::string password);
+		std::string kickClient(Client &op, std::string name, std::string reason);
+		std::string partClient(Client &client);
 		bool hasClient(Client &client);
+		bool isOperator(Client &client);
 		void broadcastMessage(std::string message);
 		bool isInviteOnly();
 		bool comparePassword(std::string); // if it has none just accept else compare
@@ -30,11 +40,10 @@ class Channel
 		std::string _passwordVal;
 		bool _passwordSet;
 
-		std::vector<Client*> _connectedClients;
-		std::vector<Client*> _bannedClients;
+		std::map<Client*, ClientStatus> _clients;
+
 
 		bool _inviteOnly;
-
-
+		ClientStatus getClientStatus(Client &client);
 };
 #endif
