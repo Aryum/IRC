@@ -1,7 +1,14 @@
 #include "placeholder.hpp"
-void placeholder::cmd_PASS(std::vector<std::string> args)
+void placeholder::cmd_PASS(Client &client, std::vector<std::string> args)
 {
-	/*
+	if (_clients.find(client.get_Socket()) != _clients.end())
+		return ; //ERR_ALREADYREGISTRED
+	if (args.size() == 0)
+		return ; //ERR_NEEDMOREPARAMS
+	if (args[0] == _password)
+		return ; //NICK CMD
+	
+	/* 
 
 	Command: PASS
 	Parameters: <password>
@@ -25,8 +32,26 @@ void placeholder::cmd_PASS(std::vector<std::string> args)
 	*/
 }
 
-void placeholder::cmd_NICK(std::vector<std::string> args)
+void placeholder::cmd_NICK(Client &client, std::vector<std::string> args)
 {
+	if (args.size() == 0)
+		return ; //ERR_NONICKNAMEGIVEN
+	
+	clientMap::iterator it = _clients.begin();
+	bool newConnection = false;
+	while (it != _clients.end())
+	{
+		if (it->first == client.get_Socket())
+			newConnection = false;
+		if (it->second->get_UserName() == args[0])
+			return ; //ERR_NICKCOLLISION
+		it++;
+	}
+
+	if (!newConnection)
+		return ;//replace name prob just change &client
+	else
+		return ;//USER CMD;
 	/*
 	Command: NICK
    Parameters: <nickname> [ <hopcount> ]
@@ -60,8 +85,20 @@ void placeholder::cmd_NICK(std::vector<std::string> args)
 	
 	*/
 }
-void placeholder::cmd_USER(std::vector<std::string> args)
+void placeholder::cmd_USER(Client &client, std::vector<std::string> args)
 {
+	if (args.size() < 4)
+		return ; //ERR_NEEDMOREPARAMS
+	clientMap::iterator it = _clients.begin();
+	while (it != _clients.end())
+	{
+		if (it->first == client.get_Socket())
+			return ; //ERR_ALREADYREGISTRED
+		it++;
+	}
+	client.set_Names(args[0], args[1], args[2], args[3]);
+	_clients.insert(std::make_pair(client.get_Socket(), &client));
+	//actually add to client list at the end of this cmd
 	/*
 	 Command: USER
    Parameters: <username> <hostname> <servername> <realname>
@@ -112,8 +149,27 @@ void placeholder::cmd_USER(std::vector<std::string> args)
 
 
 
-void placeholder::cmd_QUIT(std::vector<std::string> args)
+void placeholder::cmd_QUIT(Client &client, std::vector<std::string> args)
 {
+	_clients.erase(client.get_Socket());
+	std::string reason;
+	if (args.size() != 0)
+		reason = args[0];
+	else
+		reason = "Quit";
+	std::vector<Channel>::iterator it = _channels.begin();
+	while (it != _channels.end())
+	{
+		if (it->hasClient(client))
+		{
+			//broadcast message
+			it->broadcastMessage(reason); //will need formating
+			it->removeClient(client);
+		}
+		it++;
+	}
+	//close connection
+
 	/*
 	 Command: QUIT
    Parameters: [<Quit message>]
@@ -144,7 +200,7 @@ void placeholder::cmd_QUIT(std::vector<std::string> args)
    QUIT :Gone to have lunch        ; Preferred message format.
 	*/
 }
-void placeholder::cmd_JOIN(std::vector<std::string> args)
+void placeholder::cmd_JOIN(Client &client, std::vector<std::string> args)
 {
 	/*
 	   Command: JOIN
@@ -202,7 +258,7 @@ void placeholder::cmd_JOIN(std::vector<std::string> args)
 	*/
 }
 
-void placeholder::cmd_PART(std::vector<std::string> args)
+void placeholder::cmd_PART(Client &client, std::vector<std::string> args)
 {
 	/*
 	Command: PART
@@ -224,7 +280,7 @@ void placeholder::cmd_PART(std::vector<std::string> args)
                                    "#oz-ops".
 	*/
 }
-void placeholder::cmd_KICK(std::vector<std::string> args)
+void placeholder::cmd_KICK(Client &client, std::vector<std::string> args)
 {
 	/*
 		Command: KICK
@@ -263,7 +319,7 @@ following:
 	*/
 }
 
-void placeholder::cmd_INVITE(std::vector<std::string> args)
+void placeholder::cmd_INVITE(Client &client, std::vector<std::string> args)
 {
 	/*
 		Command: INVITE
@@ -294,7 +350,7 @@ void placeholder::cmd_INVITE(std::vector<std::string> args)
 	
 	*/
 }
-void placeholder::cmd_TOPIC(std::vector<std::string> args)
+void placeholder::cmd_TOPIC(Client &client, std::vector<std::string> args)
 {
 	/*
 		Command: TOPIC
@@ -320,7 +376,7 @@ void placeholder::cmd_TOPIC(std::vector<std::string> args)
    TOPIC #test                     ; check the topic for #test.
 	*/
 }
-void placeholder::cmd_MODE(std::vector<std::string> args)
+void placeholder::cmd_MODE(Client &client, std::vector<std::string> args)
 {
 	/*
 		Command: MODE
@@ -437,7 +493,7 @@ MODE WiZ -o                     ; WiZ 'deopping' (removing operator
 
 }
 
-void placeholder::cmd_LIST(std::vector<std::string> args)
+void placeholder::cmd_LIST(Client &client, std::vector<std::string> args)
 {
 	/*
 	Command: LIST
@@ -462,7 +518,7 @@ void placeholder::cmd_LIST(std::vector<std::string> args)
    LIST #twilight_zone,#42         ; List channels #twilight_zone and #42
 	*/
 }
-void placeholder::cmd_NAMES(std::vector<std::string> args)
+void placeholder::cmd_NAMES(Client &client, std::vector<std::string> args)
 {
 	/*
 	 Command: NAMES

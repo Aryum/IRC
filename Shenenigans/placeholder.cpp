@@ -39,11 +39,8 @@ std::string nextSpace(std::string &input, size_t &idx, bool prefix)
 	idx = curIdx + (curIdx != std::string::npos);
 	return ret;
 }
-/*
-	rememeber to respond to CAP LS
 
-*/
-void placeholder::call_cmd(std::string input)
+void placeholder::call_cmd(Client &client, std::string input)
 {
 	size_t spaceIdx = 0;
 	std::string command = "";
@@ -85,5 +82,5 @@ void placeholder::call_cmd(std::string input)
 	funcIt it = _cmd.find(command);
 	if (it == _cmd.end())
 		throw std::runtime_error(command + "  not found"); //its not a runtime error btw
-	(this->*(it->second))(params);
+	(this->*(it->second))(client, params);
 }
