@@ -1,7 +1,7 @@
 #include "placeholder.hpp"
 
 //move to a helper file probably need to make it return if it has a key or not, if it idx was already npos
-std::string nextChar(std::string &input, size_t &idx, char c, bool prefix)
+std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 {
 	size_t curIdx;
 	std::string ret;
@@ -21,7 +21,7 @@ std::string nextChar(std::string &input, size_t &idx, char c, bool prefix)
 	idx = curIdx + (curIdx != std::string::npos);
 	return ret;
 }
-
+//if we change to throw system, this should throw a reply nosuch channel or wtv
 Channel *placeholder::getChannel(std::string name)
 {
 	std::vector<Channel>::iterator it = _channels.begin();
@@ -34,6 +34,7 @@ Channel *placeholder::getChannel(std::string name)
 	}
 	return nullptr;
 }
+//if we change to throw system, this should throw a reply nosuch user or wtv
 
 Client *placeholder::getClient(std::string name)
 {

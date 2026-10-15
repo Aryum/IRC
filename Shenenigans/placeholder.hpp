@@ -16,7 +16,7 @@
 
 
 class placeholder;
-typedef std::vector<std::string> Args;
+typedef const std::vector<std::string>& Args;
 typedef std::map<std::string, void (placeholder::*)(Client &client, Args)> CmdMap;
 typedef std::map<int, void (placeholder::*)()> ReplyMap;
 typedef std::map<int, Client*> ClientMap;
@@ -57,7 +57,7 @@ class placeholder
 };
 
 //move to its own helper file, it contains all the system headers as well
-std::string nextChar(std::string &input, size_t &idx, char c, bool prefix);
+std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix);
 
 #endif
 

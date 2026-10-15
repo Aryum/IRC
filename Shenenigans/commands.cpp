@@ -475,6 +475,15 @@ void placeholder::cmd_TOPIC(Client &client, Args args)
 }
 void placeholder::cmd_MODE(Client &client, Args args)
 {
+	if (args.size() < 2)
+		return ; //ERR_NEEDMOREPARAMS
+	Channel *channel = getChannel(args[0]);
+	if (channel == nullptr)
+		return ; //ERR_NOSUCHCHANNEL
+	channel->changeMode(client, args);
+
+
+	//for user check if client arg
 	/*
 		Command: MODE
 
@@ -496,52 +505,29 @@ void placeholder::cmd_MODE(Client &client, Args args)
    created.
 
    The various modes available for channels are as follows:
-
-           o - give/take channel operator privileges;
-           p - private channel flag;
-           s - secret channel flag;
            i - invite-only channel flag;
            t - topic settable by channel operator only flag;
-           n - no messages to channel from clients on the outside;
-           m - moderated channel;
+		   k - set a channel key (password).
+           o - give/take channel operator privileges;
            l - set the user limit to channel;
-		   b - set a ban mask to keep users out;
-           v - give/take the ability to speak on a moderated channel;
-           k - set a channel key (password).
+
 
    When using the 'o' and 'b' options, a restriction on a total of three
    per mode command has been imposed.  That is, any combination of 'o'
    and
+*/
 
 
-4.2.3.2 User modes
 
-   Parameters: <nickname> {[+|-]|i|w|s|o}
+/*
 
-   The user MODEs are typically changes which affect either how the
-   client is seen by others or what 'extra' messages the client is sent.
-   A user MODE command may only be accepted if both the sender of the
-   message and the nickname given as a parameter are both the same.
-
-   The available modes are as follows:
-
-           i - marks a users as invisible;
-           s - marks a user for receipt of server notices;
-           w - user receives wallops;
-           o - operator flag.
-
-   Additional modes may be available later on.
-
-   If a user attempts to make themselves an operator using the "+o"
-   flag, the attempt should be ignored.  There is no restriction,
-   however, on anyone `deopping' themselves (using "-o").  Numeric
    Replies:
 
            ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
            ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK
            ERR_NOTONCHANNEL                ERR_KEYSET
            RPL_BANLIST                     RPL_ENDOFBANLIST
-           ERR_UNKNOWNMODE                 ERR_NOSUCHCHANNEL
+           ERR_UNKNOWNMODE                 
 
            ERR_USERSDONTMATCH              RPL_UMODEIS
            ERR_UMODEUNKNOWNFLAG

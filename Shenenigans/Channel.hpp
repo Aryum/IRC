@@ -8,7 +8,6 @@
 enum ClientChannelStatus
 {
 	Status_Connected,
-	Status_Banned,
 	Status_Op,
 	Status_None
 };
@@ -28,14 +27,13 @@ class Channel
 		std::string partClient(Client &client);
 		std::string changeTopic(Client &client, std::string topic);
 		std::string getTopic(Client &client);
-
+		std::string changeMode(Client &client, Args args);
 
 		std::string Channel::inviteClient(Client &op, Client &user);
 
 		void broadcastMessage(std::string message);
 		bool isInviteOnly();
 		bool comparePassword(std::string); // if it has none just accept else compare
-		bool isClientBanned(Client& client);
 		ClientChannelStatus getClientStatus(Client &client);
 	
 	private:

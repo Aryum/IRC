@@ -19,12 +19,10 @@ std::string Channel::joinClient(Client &client, std::string password)
 	ClientChannelStatus status = getClientStatus(client);
 	switch (status)
 	{
-		case Status_Banned:
-			return ; //ERR_BANNEDFROMCHAN
 		case Status_None:
 			break;
 		default:
-			return;
+			return; //ERR_USERONCHANNEL
 	}
 	if (_inviteOnly)
 	{
@@ -56,7 +54,7 @@ std::string Channel::kickClient(Client &op, Client &user, std::string reason)
 	if (targetStatus == Status_None)
 		return ; //ERR_NOTONCHANNEL
 	if (targetStatus == Status_Op)
-		return ; //op on op violentce
+		return ; //op on op violence?
 	_clients.erase(&user);
 	//maybe needs to check if user is already banned
 }
@@ -73,14 +71,12 @@ std::string Channel::inviteClient(Client &op, Client &user)
 			if (_inviteOnly)
 				return ; //ERR_CHANOPRIVSNEEDED
 			break;
-		default: //for banned and none status
+		default: //for none status
 			return ; //ERR_NOTONCHANNEL
 
 	}
 	switch (userStatus)
 	{
-		case Status_Banned:
-			return ; //user banned
 		case Status_None:
 			return ; //RPL_INVITING
 		default:
@@ -92,9 +88,15 @@ std::string Channel::inviteClient(Client &op, Client &user)
 std::string Channel::getTopic(Client &client)
 {
 	ClientChannelStatus callerStatus = getClientStatus(client);
-
-	if (callerStatus == Status_None || callerStatus == Status_Banned)
-		return ; //ERR_NOTONCHANNEL
+	switch (callerStatus)
+	{
+		case Status_Op:
+			break;
+		case Status_Connected:
+			return; //ERR_CHANOPRIVSNEEDED
+		default:
+			return;//ERR_NOTONCHANNEL
+	}
 	if (_topicSet)
 		return ; //RPL_TOPIC
 	return;  //RPL_NOTOPIC
@@ -118,3 +120,29 @@ std::string Channel::changeTopic(Client &client, std::string topic)
 	//prob neefds smt else
 
 }
+std::string Channel::changeMode(Client &client, Args args)
+{
+	//args are checked here, it passes MODE as well, remember to ignore 0
+	/*
+   Yes. A single MODE command can carry several mode changes in one modestring, and the parameters are consumed left to right by whichever modes need them.
+
+MODE #chan +itk secret          ; +i, +t, and key "secret"
+MODE #chan +kl secret 10        ; key, then limit (params in order)
+MODE #chan +i-t+o alice         ; mixed signs: +i, -t, +o alice
+MODE #chan -k+l 20              ; -k takes no param here, +l takes 20
+
+
+Parsing rules
+
+Start with a “current sign” (+ by default). Each + or - in the modestring switches it, and it applies to all following letters until the next sign.
+Walk the letters one at a time. For each letter, decide whether it needs a parameter, and if so take the next unused argument from the list.
+Which modes need a parameter depends on the sign:
+Mode	+	-
+i, t	none	none
+k	key	none (some servers accept and ignore a key)
+l	limit	none
+o	nick	nick
+*/
+}
+
+
