@@ -37,13 +37,13 @@ void placeholder::cmd_NICK(Client &client, Args args)
 	if (args.size() == 0)
 		return ; //ERR_NONICKNAMEGIVEN
 	
-	clientMap::iterator it = _clients.begin();
+	ClientMap::iterator it = _clients.begin();
 	bool newConnection = false;
 	while (it != _clients.end())
 	{
 		if (it->first == client.getSocket())
 			newConnection = false;
-		if (it->second->getUserName() == args[0])
+		if (it->second->getNickName() == args[0])
 			return ; //ERR_NICKCOLLISION
 		it++;
 	}
@@ -89,7 +89,7 @@ void placeholder::cmd_USER(Client &client, Args args)
 {
 	if (args.size() < 4)
 		return ; //ERR_NEEDMOREPARAMS
-	clientMap::iterator it = _clients.begin();
+	ClientMap::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
 		if (it->first == client.getSocket())
@@ -157,10 +157,9 @@ void placeholder::cmd_QUIT(Client &client, Args args)
 		reason = args[0];
 	else
 		reason = "Quit";
-	std::vector<Channel>::iterator it = _channels.begin();
-	while (it != _channels.end())
+	for (size_t i = 0; i < _channels.size(); i++)
 	{
-		if (it->hasClient(client))
+		if (_channels[i].getClientStatus(client) != Status_None)
 		{
 			//shit will need fixing
 			//shit will need fixing
@@ -169,10 +168,9 @@ void placeholder::cmd_QUIT(Client &client, Args args)
 			//shit will need fixing
 			//shit will need fixing
 			//broadcast message
-			it->broadcastMessage(reason); //will need formating
-			it->partClient(client);
+			_channels[i].broadcastMessage(reason); //will need formating
+			_channels[i].partClient(client);
 		}
-		it++;
 	}
 	//close connection
 
@@ -219,12 +217,12 @@ void placeholder::cmd_JOIN(Client &client, Args args)
 		std::string name = nextChar(args[0], channelIdx, ',', true);
 		std::string password = nextChar(args[0], channelIdx, ',', true);
 
-		std::vector<Channel>::iterator it = getChannel(name);
+		Channel *channel = getChannel(name);
 		std::string reply;
-		if (it == _channels.end())
+		if (channel == nullptr)
 			return ; //reçly ==  ERR_NOSUCHCHANNEL
 		else
-			reply = it->joinClient(client, password);
+			reply = channel->joinClient(client, password);
 		
 	}
 	/*
@@ -293,12 +291,12 @@ void placeholder::cmd_PART(Client &client, Args args)
 	while (channelIdx != std::string::npos)
 	{
 		std::string name = nextChar(args[0], channelIdx, ',', true);
-		std::vector<Channel>::iterator it = getChannel(name);
+		Channel *channel = getChannel(name);
 		std::string reply;
-		if (it == _channels.end())
+		if (channel == nullptr)
 			return ; //reçly ==  ERR_NOSUCHCHANNEL
 		else
-			reply = it->partClient(client);
+			reply = channel->partClient(client);
 		//send reply
 	}
 	/*
@@ -325,30 +323,26 @@ void placeholder::cmd_KICK(Client &client, Args args)
 {
 	if (args.size() < 2)
 		return ; //ERR_NEEDMOREPARAMS
-	std::vector<Channel>::iterator it = getChannel(args[0]);
-	if (it == _channels.end())
-		return ; //ERR_NOSUCHCHANNEL
-	if (it->isOperator(client))
-		return ; //ERR_CHANOPRIVSNEEDED
-	it->kickClient(client, args[0], args.size() >= 3 ? args[2] : "");
 
 	size_t channelIdx = 0;
 	size_t userIdx = 0;
 	bool foundChannel = false;
 	while (channelIdx != std::string::npos)
 	{
-		std::string channel = nextChar(args[0], channelIdx, ',', true);
-		std::string user = nextChar(args[1], userIdx, ',', true);
+		std::string channelName = nextChar(args[0], channelIdx, ',', true);
+		std::string nickName = nextChar(args[1], userIdx, ',', true);
 
-		std::vector<Channel>::iterator it = getChannel(channel);
+		Channel *channel = getChannel(channelName);
 		std::string reply;
-		
-		if (it == _channels.end())
+		if (channel == nullptr)
 			return ; //reçly ==  ERR_NOSUCHCHANNEL
-		if (userIdx == std::string::npos && user == "")
+		if (userIdx == std::string::npos && nickName == "")
 			break;
-		reply = it->kickClient(client, user, args.size() >= 3 ? args[2] : "");
-		//send reply
+		Client *user = getClient(nickName);
+		if (user == nullptr)
+			return ; //ERR_NOSUCHNICK
+		reply = channel->kickClient(client, *user, args.size() >= 3 ? args[2] : "");
+		return ;//reply
 	}
 	/*
 NOTE:
@@ -397,6 +391,21 @@ following:
 
 void placeholder::cmd_INVITE(Client &client, Args args)
 {
+	if (args.size() < 2)
+		return ;// ERR_NEEDMOREPARAMS
+	
+	Client *invited = getClient(args[0]);
+	if (invited == nullptr)
+		return ; //ERR_NOSUCHNICK
+
+	Channel *channel = getChannel(args[1]);
+	if (channel == nullptr)
+		return ; //ERR_NOSUCHCHANNEL
+	Client *user = getClient(args[0]);
+		if (user == nullptr)
+			return ; //ERR_NOSUCHNICK
+	std::string reply =	channel->inviteClient(client, *user);
+	return ; //reply
 	/*
 		Command: INVITE
    Parameters: <nickname> <channel>
@@ -428,6 +437,18 @@ void placeholder::cmd_INVITE(Client &client, Args args)
 }
 void placeholder::cmd_TOPIC(Client &client, Args args)
 {
+	if (args.size() < 1)
+		return ;// ERR_NEEDMOREPARAMS
+	Channel *channel = getChannel(args[0]);
+	if (channel == nullptr)
+		return ; //ERR_NOSUCHCHANNEL
+	if (args.size() == 1)
+	{
+		channel->getTopic(client);
+		return ; //RPL_TOPIC or no RPL_NOTOPIC?
+	}
+	channel->changeTopic(client, args[1]);
+	
 	/*
 		Command: TOPIC
    Parameters: <channel> [<topic>]

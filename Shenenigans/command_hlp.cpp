@@ -22,15 +22,28 @@ std::string nextChar(std::string &input, size_t &idx, char c, bool prefix)
 	return ret;
 }
 
-std::vector<Channel>::iterator placeholder::getChannel(std::string name)
+Channel *placeholder::getChannel(std::string name)
 {
 	std::vector<Channel>::iterator it = _channels.begin();
 
 	while (it != _channels.end())
 	{
 		if (it->getName() == name)
-			break;
+			return &(*it);
 		it++;
 	}
-	return it;
+	return nullptr;
+}
+
+Client *placeholder::getClient(std::string name)
+{
+	ClientMap::iterator it = _clients.begin();
+
+	while (it != _clients.end())
+	{
+		if (it->second->getNickName() == name)
+			return it->second;
+		it++;
+	}
+	return nullptr;
 }

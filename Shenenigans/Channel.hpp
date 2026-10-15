@@ -5,12 +5,12 @@
 #include "Client.hpp"
 #include "placeholder.hpp"
 
-enum ClientStatus
+enum ClientChannelStatus
 {
-	Connected,
-	Banned,
-	Op,
-	None
+	Status_Connected,
+	Status_Banned,
+	Status_Op,
+	Status_None
 };
 
 
@@ -24,26 +24,27 @@ class Channel
 
 		//returns reply
 		std::string joinClient(Client &client, std::string password);
-		std::string kickClient(Client &op, std::string name, std::string reason);
+		std::string kickClient(Client &op, Client &user, std::string reason);
 		std::string partClient(Client &client);
-		bool hasClient(Client &client);
-		bool isOperator(Client &client);
+		std::string changeTopic(Client &client, std::string topic);
+		std::string getTopic(Client &client);
+
+
+		std::string Channel::inviteClient(Client &op, Client &user);
+
 		void broadcastMessage(std::string message);
 		bool isInviteOnly();
 		bool comparePassword(std::string); // if it has none just accept else compare
 		bool isClientBanned(Client& client);
-
+		ClientChannelStatus getClientStatus(Client &client);
+	
 	private:
 		std::string _name;
 		std::string _topicVal;
 		bool _topicSet;
 		std::string _passwordVal;
 		bool _passwordSet;
-
-		std::map<Client*, ClientStatus> _clients;
-
-
+		std::map<Client*, ClientChannelStatus> _clients;
 		bool _inviteOnly;
-		ClientStatus getClientStatus(Client &client);
 };
 #endif

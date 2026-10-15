@@ -19,7 +19,7 @@ class placeholder;
 typedef std::vector<std::string> Args;
 typedef std::map<std::string, void (placeholder::*)(Client &client, Args)> CmdMap;
 typedef std::map<int, void (placeholder::*)()> ReplyMap;
-typedef std::map<int, Client*> clientMap;
+typedef std::map<int, Client*> ClientMap;
 
 class placeholder
 {
@@ -31,7 +31,7 @@ class placeholder
 		int _port;
 		std::string _password;
 		std::vector<pollfd> _sockets; //client + server
-		clientMap _clients;
+		ClientMap _clients;
 		std::vector<Channel> _channels;
 		CmdMap _cmd;
 		ReplyMap _rpl;
@@ -51,7 +51,9 @@ class placeholder
 
 
 		//move to its own helper file, it contains all the system headers as well
-		std::vector<Channel>::iterator getChannel(std::string name);
+		Channel* getChannel(std::string name);
+		Client *getClient(std::string name);
+
 };
 
 //move to its own helper file, it contains all the system headers as well
