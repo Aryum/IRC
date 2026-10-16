@@ -1,4 +1,4 @@
-#include "placeholder.hpp"
+#include "Server.hpp"
 
 //move to a helper file probably need to make it return if it has a key or not, if it idx was already npos
 std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
@@ -22,7 +22,7 @@ std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 	return ret;
 }
 //if we change to throw system, this should throw a reply nosuch channel or wtv
-Channel *placeholder::getChannel(std::string name)
+Channel *Server::getChannel(std::string name)
 {
 	std::vector<Channel>::iterator it = _channels.begin();
 
@@ -36,7 +36,7 @@ Channel *placeholder::getChannel(std::string name)
 }
 //if we change to throw system, this should throw a reply nosuch user or wtv
 
-Client *placeholder::getClient(std::string name)
+Client *Server::getClient(std::string name)
 {
 	ClientMap::iterator it = _clients.begin();
 

@@ -1,29 +1,22 @@
-#ifndef PLACEHOLDER_HPP
-# define PLACEHOLDER_HPP
+#ifndef SERVER_HPP
+# define SERVER_HPP
+#include "../Classes.hpp"
+
 #include <poll.h>
 #include <sys/socket.h>
 #include <sys/socket.h>
 #include <vector>
 #include <string>
 #include <map>
-#include <string>
-#include <exception>
-#include <stdexcept>
-#include <iostream>
-#include <vector>
-#include "Client.hpp"
-#include "Channel.hpp"
-#include "Reply.hpp"
-
-class placeholder;
+class Server;
 typedef const std::vector<std::string>& Args;
-typedef std::map<std::string, void (placeholder::*)(Client &, Args)> CmdMap;
+typedef std::map<std::string, void (Server::*)(Client &, Args)> CmdMap;
 typedef std::map<int, Client*> ClientMap;
 
-class placeholder
+class Server
 {
 	public:
-		placeholder();
+		Server();
 		void call_cmd(Client &client, std::string input);
 
 	private:

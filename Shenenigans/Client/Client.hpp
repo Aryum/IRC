@@ -1,10 +1,7 @@
 
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
-#include <string>
-#include "Channel.hpp"
-#include "placeholder.hpp"
-
+#include "../Classes.hpp"
 class Client
 {
 	public:

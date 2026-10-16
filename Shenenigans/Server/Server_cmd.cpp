@@ -1,5 +1,5 @@
-#include "placeholder.hpp"
-void placeholder::cmd_PASS(Client &client, Args args)
+#include "Server.hpp"
+void Server::cmd_PASS(Client &client, Args args)
 {
 	if (_clients.find(client.getSocket()) != _clients.end())
 		return ; //ERR_ALREADYREGISTRED
@@ -32,7 +32,7 @@ void placeholder::cmd_PASS(Client &client, Args args)
 	*/
 }
 
-void placeholder::cmd_NICK(Client &client, Args args)
+void Server::cmd_NICK(Client &client, Args args)
 {
 	if (args.size() == 0)
 		return ; //ERR_NONICKNAMEGIVEN
@@ -85,7 +85,7 @@ void placeholder::cmd_NICK(Client &client, Args args)
 	
 	*/
 }
-void placeholder::cmd_USER(Client &client, Args args)
+void Server::cmd_USER(Client &client, Args args)
 {
 	if (args.size() < 4)
 		return ; //ERR_NEEDMOREPARAMS
@@ -149,7 +149,7 @@ void placeholder::cmd_USER(Client &client, Args args)
 
 
 
-void placeholder::cmd_QUIT(Client &client, Args args)
+void Server::cmd_QUIT(Client &client, Args args)
 {
 	_clients.erase(client.getSocket());
 	std::string reason;
@@ -205,7 +205,7 @@ void placeholder::cmd_QUIT(Client &client, Args args)
 	*/
 }
 
-void placeholder::cmd_JOIN(Client &client, Args args)
+void Server::cmd_JOIN(Client &client, Args args)
 {
 	if (args.size() < 1)
 		return ; //ERR_NEEDMOREPARAMS
@@ -282,7 +282,7 @@ void placeholder::cmd_JOIN(Client &client, Args args)
 }
 
 
-void placeholder::cmd_PART(Client &client, Args args)
+void Server::cmd_PART(Client &client, Args args)
 {
 	if (args.size() < 1)
 		return ; //ERR_NEEDMOREPARAMS
@@ -319,7 +319,7 @@ void placeholder::cmd_PART(Client &client, Args args)
                                    "#oz-ops".
 	*/
 }
-void placeholder::cmd_KICK(Client &client, Args args)
+void Server::cmd_KICK(Client &client, Args args)
 {
 	if (args.size() < 2)
 		return ; //ERR_NEEDMOREPARAMS
@@ -388,7 +388,7 @@ following:
 	*/
 }
 
-void placeholder::cmd_INVITE(Client &client, Args args)
+void Server::cmd_INVITE(Client &client, Args args)
 {
 	if (args.size() < 2)
 		return ;// ERR_NEEDMOREPARAMS
@@ -433,7 +433,7 @@ void placeholder::cmd_INVITE(Client &client, Args args)
 	
 	*/
 }
-void placeholder::cmd_TOPIC(Client &client, Args args)
+void Server::cmd_TOPIC(Client &client, Args args)
 {
 	if (args.size() < 1)
 		return ;// ERR_NEEDMOREPARAMS
@@ -471,7 +471,7 @@ void placeholder::cmd_TOPIC(Client &client, Args args)
    TOPIC #test                     ; check the topic for #test.
 	*/
 }
-void placeholder::cmd_MODE(Client &client, Args args)
+void Server::cmd_MODE(Client &client, Args args)
 {
 	if (args.size() < 2)
 		return ; //ERR_NEEDMOREPARAMS
@@ -574,7 +574,7 @@ MODE WiZ -o                     ; WiZ 'deopping' (removing operator
 
 }
 
-void placeholder::cmd_LIST(Client &client, Args args)
+void Server::cmd_LIST(Client &client, Args args)
 {
 	/*
 	Command: LIST

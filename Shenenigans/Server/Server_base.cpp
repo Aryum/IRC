@@ -1,25 +1,25 @@
-#include "placeholder.hpp"
+#include "Server.hpp"
 
-placeholder::placeholder()
+Server::Server()
 {
 	createMap();
 }
 
-void placeholder::createMap()
+void Server::createMap()
 {
-	_cmd["PASS"] = &placeholder::cmd_PASS;
-	_cmd["NICK"] = &placeholder::cmd_NICK;
-	_cmd["USER"] = &placeholder::cmd_USER;
-	_cmd["QUIT"] = &placeholder::cmd_QUIT;
-	_cmd["JOIN"] = &placeholder::cmd_JOIN;
-	_cmd["KICK"] = &placeholder::cmd_KICK;
-	_cmd["INVITE"] = &placeholder::cmd_INVITE;
-	_cmd["TOPIC"] = &placeholder::cmd_TOPIC;
-	_cmd["MODE"] = &placeholder::cmd_MODE;
+	_cmd["PASS"] = &Server::cmd_PASS;
+	_cmd["NICK"] = &Server::cmd_NICK;
+	_cmd["USER"] = &Server::cmd_USER;
+	_cmd["QUIT"] = &Server::cmd_QUIT;
+	_cmd["JOIN"] = &Server::cmd_JOIN;
+	_cmd["KICK"] = &Server::cmd_KICK;
+	_cmd["INVITE"] = &Server::cmd_INVITE;
+	_cmd["TOPIC"] = &Server::cmd_TOPIC;
+	_cmd["MODE"] = &Server::cmd_MODE;
 }
 
 
-void placeholder::call_cmd(Client &client, std::string input)
+void Server::call_cmd(Client &client, std::string input)
 {
 	size_t spaceIdx = 0;
 	std::string command = "";

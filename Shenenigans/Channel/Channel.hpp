@@ -2,8 +2,7 @@
 # define CHANNEL_HPP
 #include <string>
 #include <vector>
-#include "Client.hpp"
-#include "placeholder.hpp"
+#include "../Classes.hpp"
 
 enum ClientChannelStatus
 {
