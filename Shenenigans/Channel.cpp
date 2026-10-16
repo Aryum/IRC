@@ -29,7 +29,7 @@ ClientChannelStatus Channel::getClientStatus(const Client &client)
 void Channel::joinClient(Client &client, std::string password)
 {
 	_clientPassword = password;
-	Check checks[] {isOnChannel, isInviteOnly, fullChannel, checkKey, NULL};
+	Check checks[] {isOnChannel, canInvite, fullChannel, checkKey, NULL};
 	if (hasError(client, checks))
 		return ;
 	_clients.insert(std::make_pair(&client, Status_Connected));
@@ -51,47 +51,18 @@ void Channel::kickClient(Client &op, Client &user, std::string reason)
 
 void Channel::inviteClient(Client &op, Client &user)
 {
-	ClientChannelStatus callerStatus = getClientStatus(op);
-	ClientChannelStatus userStatus = getClientStatus(user);
-	switch (callerStatus)
-	{
-		case Status_Op:
-			break;
-		case Status_Connected:
-			if (!_inviteOnly)
-				break;
-			op.sendReply("ERR_CHANOPRIVSNEEDED");
-			return ;
-		default: //for none status
-			op.sendReply("ERR_NOTONCHANNEL");
-			return ; 
-
-	}
-	if (userStatus != Status_None)
-		op.sendReply("ERR_NOTONCHANNEL");
-	else if (_clients.size() == _clientLimit)
-		op.sendReply("ERR_CHANNELISFULL");
-	else
-		op.sendReply("RPL_INVITING");
-	
-	//RPL_AWAY is sent check when itssent prob doesnt matter
+	Check checks[] {canInvite, fullChannel, NULL};
+	if (hasError(op, checks) || isOnChannel(user))
+		return ;
+	op.sendReply("RPL_INVITING");
 }
 
 
 void Channel::getTopic(Client &client)
 {
-	ClientChannelStatus callerStatus = getClientStatus(client);
-	switch (callerStatus)
-	{
-		case Status_Op:
-			break;
-		case Status_Connected: //probably wrong
-			client.sendReply("ERR_CHANOPRIVSNEEDED");
-			return; 
-		default:
-			client.sendReply("ERR_NOTONCHANNEL");
-			return;
-	}
+	//probably wrong
+	if (!isOperator(client))
+		return ;
 	if (_topicVal == "")
 		client.sendReply("RPL_NOTOPIC");
 	else
@@ -100,33 +71,27 @@ void Channel::getTopic(Client &client)
 
 void Channel::changeTopic(Client &client, std::string topic)
 {
-	ClientChannelStatus callerStatus = getClientStatus(client);
-	switch (callerStatus)
-	{
-		case Status_None:
-			return;//ERR_NOTONCHANNEL
-		case Status_Connected:
-			return; //ERR_CHANOPRIVSNEEDED
-		default:
-			break;
-	}
+	if (!isOperator(client))
+		return ;
 	_topicVal = topic;
 	//prob neefds smt else
 }
 
-bool Channel::consumeArg(Args &args, size_t &cur, std::string &out)
+bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &out)
 {
 	if (cur == args.size())
 	{
-		return false; //ERR_NEEDMOREPARAMS
+		client.sendReply("ERR_NEEDMOREPARAMS");
+		return false; 
 	}
 	out = args[cur];
 	cur++;
 	return true;
 }
 
-void Channel::toggleOp(std::string name, bool on)
+void Channel::toggleOp(Client &client, std::string name, bool on)
 {
+	
 	std::map<const Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
@@ -135,8 +100,9 @@ void Channel::toggleOp(std::string name, bool on)
 			it->second = on ? Status_Op: Status_Connected;
 			return ;
 		}
-		it++; //ERR_NOTONCHANNEL
+		it++;
 	}
+	client.sendReply("ERR_NOTONCHANNEL");
 	return ;
 }
 
@@ -151,15 +117,8 @@ ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
            ERR_UMODEUNKNOWNFLAG*/
 void Channel::changeMode(Client &client, Args args)
 {
-	switch(getClientStatus(client))
-	{
-		case Status_None:
-			return ; //ERR_NOTONCHANNEL
-		case Status_Connected:
-			return ; //ERR_CHANOPRIVSNEEDED
-		default:
-			break;
-	}
+	if (!isOperator(client))
+		return;
 	bool adding = true;
 	size_t curParam = 2;
 	for (size_t i = 0; args[1][i] != '\0'; i++)
@@ -177,29 +136,29 @@ void Channel::changeMode(Client &client, Args args)
 				break;
 			case 't':
 				if (adding)
-					consumeArg(args, curParam, _topicVal);
+					consumeArg(client, args, curParam, _topicVal);
 				else
 					_topicVal = "";
 				break;
 			case 'k':
 				if (adding)
-					consumeArg(args, curParam,_passwordVal);
+					consumeArg(client, args, curParam,_passwordVal);
 				else
 					_passwordVal = "";
 				break;
 			case 'o':
 				//this allows for op on op shenenignas
-				if (consumeArg(args, curParam, var))
-					toggleOp(var, adding);
+				if (consumeArg(client, args, curParam, var))
+					toggleOp(client, var, adding);
 				break;
 			case 'l':
-				if (adding && consumeArg(args, curParam, var))
+				if (adding && consumeArg(client, args, curParam, var))
 					_clientLimit = atoi(var.c_str());
 				else
 					_clientLimit = -1;
 				break;
 			default:
-				//ERR_UNKNOWNMODE
+				client.sendReply("ERR_UNKNOWNMODE");
 				break;
 
 		}

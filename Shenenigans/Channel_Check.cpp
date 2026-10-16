@@ -50,9 +50,14 @@ bool Channel::fullChannel(const Client &c)
 	return (check(c, _clientLimit != _clients.size(), "ERR_CHANNELISFULL"));
 }
 
-bool Channel::isInviteOnly(const Client &c)
+bool Channel::canInvite(const Client &c)
 {
-	return (check(c, !_inviteOnly, "ERR_INVITEONLYCHAN"));
+	ClientChannelStatus status = getClientStatus(c);
+	if (!check(c, status != Status_None, "ERR_NOTONCHANNEL"))
+		return false;
+	if (_inviteOnly)
+		return (check(c, status == Status_Op, "ERR_INVITEONLYCHAN"));
+	return true;
 }
 
 bool Channel::checkKey(const Client &c)

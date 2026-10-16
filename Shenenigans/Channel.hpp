@@ -43,12 +43,13 @@ class Channel
 		bool _inviteOnly;
 		int _clientLimit;
 		
-		bool consumeArg(Args &args, size_t &cur, std::string &out);
+		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
 		void toggleOp(std::string name, bool on);
+		void toggleOp(Client &client, std::string name, bool on);
 		bool isOnChannel(const Client &c);
 		bool isOperator(const Client &c);
 		bool fullChannel(const Client &c);
-		bool isInviteOnly(const Client &c);
+		bool canInvite(const Client &c);
 		bool checkKey(const Client &c);
 		bool hasError(const Client &c, Check *checks);
 };
