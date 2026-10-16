@@ -21,7 +21,7 @@ static bool check(const Client &c, bool condition, const std::string &msg)
 	return condition;
 }
 
-bool Channel::hasError(const Client &c, Check *checks)
+bool Channel::checkMultiple(const Client &c, Check *checks)
 {
 	for (size_t i = 0; checks[i] != NULL; i++)
 	{
@@ -31,13 +31,13 @@ bool Channel::hasError(const Client &c, Check *checks)
 	return false;
 }
 
-bool Channel::isOnChannel(const Client &c)
+bool Channel::check_isOnChannel(const Client &c)
 {
 	return check(c, getClientStatus(c) != Status_None, "ERR_NOTONCHANNEL");
 }
 
 
-bool Channel::isOperator(const Client &c)
+bool Channel::check_isOperator(const Client &c)
 {
 	ClientChannelStatus status = getClientStatus(c);
 	if (!check(c, status != Status_None, "ERR_NOTONCHANNEL"))
@@ -45,12 +45,12 @@ bool Channel::isOperator(const Client &c)
 	return check(c, status == Status_Op, "ERR_CHANOPRIVSNEEDED");
 }
 
-bool Channel::fullChannel(const Client &c)
+bool Channel::check_fullChannel(const Client &c)
 {
 	return (check(c, _clientLimit != _clients.size(), "ERR_CHANNELISFULL"));
 }
 
-bool Channel::canInvite(const Client &c)
+bool Channel::check_canInvite(const Client &c)
 {
 	ClientChannelStatus status = getClientStatus(c);
 	if (!check(c, status != Status_None, "ERR_NOTONCHANNEL"))
@@ -60,7 +60,7 @@ bool Channel::canInvite(const Client &c)
 	return true;
 }
 
-bool Channel::checkKey(const Client &c)
+bool Channel::check_key(const Client &c)
 {
 	return (check(c, _passwordVal == "" || _clientPassword == _passwordVal, "ERR_BADCHANNELKEY"));
 }

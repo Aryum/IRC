@@ -29,30 +29,30 @@ ClientChannelStatus Channel::getClientStatus(const Client &client)
 void Channel::joinClient(Client &client, std::string password)
 {
 	_clientPassword = password;
-	Check checks[] {isOnChannel, canInvite, fullChannel, checkKey, NULL};
-	if (hasError(client, checks))
+	Check checks[] {check_isOnChannel, check_canInvite, check_fullChannel, check_key, NULL};
+	if (checkMultiple(client, checks))
 		return ;
 	_clients.insert(std::make_pair(&client, Status_Connected));
 }
 
 void Channel::partClient(Client &client)
 {
-	if (!isOnChannel(client))
+	if (!check_isOnChannel(client))
 		return ;
 	_clients.erase(&client);
 }
 
 void Channel::kickClient(Client &op, Client &user, std::string reason)
 {
-	if (!isOperator(op) || !isOnChannel(user))
+	if (!check_isOperator(op) || !check_isOnChannel(user))
 		return;
 	_clients.erase(&user);
 }
 
 void Channel::inviteClient(Client &op, Client &user)
 {
-	Check checks[] {canInvite, fullChannel, NULL};
-	if (hasError(op, checks) || isOnChannel(user))
+	Check checks[] {check_canInvite, check_fullChannel, NULL};
+	if (checkMultiple(op, checks) || check_isOnChannel(user))
 		return ;
 	op.sendReply("RPL_INVITING");
 }
@@ -61,7 +61,7 @@ void Channel::inviteClient(Client &op, Client &user)
 void Channel::getTopic(Client &client)
 {
 	//probably wrong
-	if (!isOperator(client))
+	if (!check_isOperator(client))
 		return ;
 	if (_topicVal == "")
 		client.sendReply("RPL_NOTOPIC");
@@ -71,7 +71,7 @@ void Channel::getTopic(Client &client)
 
 void Channel::changeTopic(Client &client, std::string topic)
 {
-	if (!isOperator(client))
+	if (!check_isOperator(client))
 		return ;
 	_topicVal = topic;
 	//prob neefds smt else
@@ -117,7 +117,7 @@ ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
            ERR_UMODEUNKNOWNFLAG*/
 void Channel::changeMode(Client &client, Args args)
 {
-	if (!isOperator(client))
+	if (!check_isOperator(client))
 		return;
 	bool adding = true;
 	size_t curParam = 2;

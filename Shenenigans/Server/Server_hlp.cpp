@@ -21,7 +21,7 @@ std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 	idx = curIdx + (curIdx != std::string::npos);
 	return ret;
 }
-//if we change to throw system, this should throw a reply nosuch channel or wtv
+
 Channel *Server::getChannel(std::string name)
 {
 	std::vector<Channel>::iterator it = _channels.begin();
@@ -34,17 +34,30 @@ Channel *Server::getChannel(std::string name)
 	}
 	return nullptr;
 }
+
+bool Server::getChannel(Client &client, std::string name, Channel **out)
+{
+	*out = getChannel(name);
+	if (*out == nullptr)
+		client.sendReply("ERR_NOSUCHCHANNEL");
+	return (*out != nullptr);
+}
 //if we change to throw system, this should throw a reply nosuch user or wtv
 
-Client *Server::getClient(std::string name)
+bool Server::getClient(Client &client, std::string name, Client **out)
 {
 	ClientMap::iterator it = _clients.begin();
 
 	while (it != _clients.end())
 	{
 		if (it->second->getNickName() == name)
-			return it->second;
+		{
+			*out = it->second;
+			return true;
+		}
 		it++;
 	}
-	return nullptr;
+	client.sendReply("ERR_NOSUCHNICK");
+
+	return false;
 }

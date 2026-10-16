@@ -2,11 +2,12 @@
 void Server::cmd_PASS(Client &client, Args args)
 {
 	if (_clients.find(client.getSocket()) != _clients.end())
-		return ; //ERR_ALREADYREGISTRED
-	if (args.size() == 0)
-		return ; //ERR_NEEDMOREPARAMS
+		client.sendReply("ERR_ALREADYREGISTRED");
+	else if (args.size() == 0)
+		client.sendReply("ERR_NEEDMOREPARAMS");
+		return ; 
 	if (args[0] == _password)
-		return ; //NICK CMD
+		return ; //NICK CMD check how  is it going to work
 	
 	/* 
 
@@ -35,7 +36,10 @@ void Server::cmd_PASS(Client &client, Args args)
 void Server::cmd_NICK(Client &client, Args args)
 {
 	if (args.size() == 0)
-		return ; //ERR_NONICKNAMEGIVEN
+	{
+		client.sendReply("ERR_NONICKNAMEGIVEN");
+		return ; 
+	}
 	
 	ClientMap::iterator it = _clients.begin();
 	bool newConnection = false;
@@ -44,7 +48,10 @@ void Server::cmd_NICK(Client &client, Args args)
 		if (it->first == client.getSocket())
 			newConnection = false;
 		if (it->second->getNickName() == args[0])
-			return ; //ERR_NICKCOLLISION
+		{
+			client.sendReply("ERR_NICKCOLLISION");
+			return ;
+		}
 		it++;
 	}
 
@@ -88,12 +95,18 @@ void Server::cmd_NICK(Client &client, Args args)
 void Server::cmd_USER(Client &client, Args args)
 {
 	if (args.size() < 4)
-		return ; //ERR_NEEDMOREPARAMS
+	{
+		client.sendReply("ERR_NEEDMOREPARAMS");
+		return ;
+	}
 	ClientMap::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
 		if (it->first == client.getSocket())
-			return ; //ERR_ALREADYREGISTRED
+		{
+			client.sendReply("ERR_ALREADYREGISTRED");
+			return ;
+		}
 		it++;
 	}
 	client.setNames(args[0], args[1], args[2], args[3]);
@@ -208,7 +221,10 @@ void Server::cmd_QUIT(Client &client, Args args)
 void Server::cmd_JOIN(Client &client, Args args)
 {
 	if (args.size() < 1)
-		return ; //ERR_NEEDMOREPARAMS
+	{
+		client.sendReply("ERR_NEEDMOREPARAMS");
+		return ;
+	}
 	size_t channelIdx = 0;
 	size_t keyIdx = 0;
 
@@ -285,19 +301,20 @@ void Server::cmd_JOIN(Client &client, Args args)
 void Server::cmd_PART(Client &client, Args args)
 {
 	if (args.size() < 1)
-		return ; //ERR_NEEDMOREPARAMS
+	{
+		client.sendReply("ERR_NEEDMOREPARAMS");
+		return ;
+	}
 	size_t channelIdx = 0;
 	bool foundChannel = false;
 	while (channelIdx != std::string::npos)
 	{
 		std::string name = nextChar(args[0], channelIdx, ',', true);
-		Channel *channel = getChannel(name);
-		std::string reply;
-		if (channel == nullptr)
-			return ; //reçly ==  ERR_NOSUCHCHANNEL
+		Channel *channel = nullptr;
+		if (getChannel(client, name, &channel))
+			return ;
 		else
 			channel->partClient(client);
-		//send reply
 	}
 	/*
 	Command: PART
@@ -322,7 +339,10 @@ void Server::cmd_PART(Client &client, Args args)
 void Server::cmd_KICK(Client &client, Args args)
 {
 	if (args.size() < 2)
-		return ; //ERR_NEEDMOREPARAMS
+	{
+		client.sendReply("ERR_NEEDMOREPARAMS");
+		return ;
+	}
 
 	size_t channelIdx = 0;
 	size_t userIdx = 0;
@@ -331,16 +351,12 @@ void Server::cmd_KICK(Client &client, Args args)
 	{
 		std::string channelName = nextChar(args[0], channelIdx, ',', true);
 		std::string nickName = nextChar(args[1], userIdx, ',', true);
-
-		Channel *channel = getChannel(channelName);
-		std::string reply;
-		if (channel == nullptr)
-			return ; //reçly ==  ERR_NOSUCHCHANNEL
 		if (userIdx == std::string::npos && nickName == "")
-			return ; //ERR_NEEDMOREPARAMS
-		Client *user = getClient(nickName);
-		if (user == nullptr)
-			return ; //ERR_NOSUCHNICK
+			break ;
+		Channel *channel = nullptr;
+		Client *user = nullptr;
+		if (!getChannel(client, channelName, &channel) || !getClient(client, nickName, &user));
+			continue ; 
 		channel->kickClient(client, *user, args.size() >= 3 ? args[2] : "");
 	}
 	/*
@@ -391,18 +407,14 @@ following:
 void Server::cmd_INVITE(Client &client, Args args)
 {
 	if (args.size() < 2)
-		return ;// ERR_NEEDMOREPARAMS
-	
-	Client *invited = getClient(args[0]);
-	if (invited == nullptr)
-		return ; //ERR_NOSUCHNICK
-
-	Channel *channel = getChannel(args[1]);
-	if (channel == nullptr)
-		return ; //ERR_NOSUCHCHANNEL
-	Client *user = getClient(args[0]);
-		if (user == nullptr)
-			return ; //ERR_NOSUCHNICK
+	{
+		client.sendReply("ERR_NEEDMOREPARAMS");
+		return ;
+	}
+	Client *user = nullptr;
+	Channel *channel = nullptr;
+	if (!getClient(client, args[1], &user) || !getChannel(client, args[2], &channel))
+		return ; 
 	channel->inviteClient(client, *user);
 	/*
 		Command: INVITE
@@ -436,16 +448,17 @@ void Server::cmd_INVITE(Client &client, Args args)
 void Server::cmd_TOPIC(Client &client, Args args)
 {
 	if (args.size() < 1)
-		return ;// ERR_NEEDMOREPARAMS
-	Channel *channel = getChannel(args[0]);
-	if (channel == nullptr)
+	{
+		client.sendReply("ERR_NEEDMOREPARAMS");
+		return ;
+	}
+	Channel *channel = nullptr;
+	if (!getChannel(client, args[0], &channel))
 		return ; //ERR_NOSUCHCHANNEL
 	if (args.size() == 1)
-	{
 		channel->getTopic(client);
-		return ; //RPL_TOPIC or no RPL_NOTOPIC?
-	}
-	channel->changeTopic(client, args[1]);
+	else
+		channel->changeTopic(client, args[1]);
 	
 	/*
 		Command: TOPIC
@@ -474,9 +487,12 @@ void Server::cmd_TOPIC(Client &client, Args args)
 void Server::cmd_MODE(Client &client, Args args)
 {
 	if (args.size() < 2)
-		return ; //ERR_NEEDMOREPARAMS
-	Channel *channel = getChannel(args[0]);
-	if (channel == nullptr)
+	{
+		client.sendReply("ERR_NEEDMOREPARAMS");
+		return ;
+	}
+	Channel *channel = nullptr;
+	if (!getChannel(client, args[0], &channel))
 		return ; //ERR_NOSUCHCHANNEL
 	channel->changeMode(client, args);
 

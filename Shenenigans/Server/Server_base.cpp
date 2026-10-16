@@ -60,6 +60,6 @@ void Server::call_cmd(Client &client, std::string input)
 	return;
 	CmdMap::iterator it = _cmd.find(command);
 	if (it == _cmd.end())
-		throw Reply(command + "  not found"); 
+		client.sendReply(command + "  not found"); // aint like this obv
 	(this->*(it->second))(client, params);
 }

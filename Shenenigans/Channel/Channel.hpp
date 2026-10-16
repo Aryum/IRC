@@ -45,11 +45,11 @@ class Channel
 		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
 		void toggleOp(std::string name, bool on);
 		void toggleOp(Client &client, std::string name, bool on);
-		bool isOnChannel(const Client &c);
-		bool isOperator(const Client &c);
-		bool fullChannel(const Client &c);
-		bool canInvite(const Client &c);
-		bool checkKey(const Client &c);
-		bool hasError(const Client &c, Check *checks);
+		bool check_isOnChannel(const Client &c);
+		bool check_isOperator(const Client &c);
+		bool check_fullChannel(const Client &c);
+		bool check_canInvite(const Client &c);
+		bool check_key(const Client &c);
+		bool checkMultiple(const Client &c, Check *checks);
 };
 #endif

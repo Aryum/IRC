@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <iostream>
+
 class Server;
 typedef const std::vector<std::string>& Args;
 typedef std::map<std::string, void (Server::*)(Client &, Args)> CmdMap;
@@ -23,8 +25,8 @@ class Server
 		int _port;
 		std::string _password;
 		std::vector<pollfd> _sockets; //client + server
-		ClientMap _clients;
 		std::vector<Channel> _channels;
+		ClientMap _clients;
 		CmdMap _cmd;
 		
 		void createMap();
@@ -42,9 +44,9 @@ class Server
 
 
 		//move to its own helper file, it contains all the system headers as well
-		Channel* getChannel(std::string name);
-		Client *getClient(std::string name);
-
+		bool getClient(Client &client, std::string name, Client **out);
+		bool getChannel(Client &client, std::string name, Channel **out);
+		Channel *getChannel(std::string name);
 };
 
 //move to its own helper file, it contains all the system headers as well
