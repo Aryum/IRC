@@ -220,9 +220,9 @@ void placeholder::cmd_JOIN(Client &client, Args args)
 		Channel *channel = getChannel(name);
 		std::string reply;
 		if (channel == nullptr)
-			return ; //reçly ==  ERR_NOSUCHCHANNEL
+			_channels.push_back(Channel(client, name));
 		else
-			reply = channel->joinClient(client, password);
+			channel->joinClient(client, password);
 		
 	}
 	/*
@@ -296,7 +296,7 @@ void placeholder::cmd_PART(Client &client, Args args)
 		if (channel == nullptr)
 			return ; //reçly ==  ERR_NOSUCHCHANNEL
 		else
-			reply = channel->partClient(client);
+			channel->partClient(client);
 		//send reply
 	}
 	/*
@@ -337,12 +337,11 @@ void placeholder::cmd_KICK(Client &client, Args args)
 		if (channel == nullptr)
 			return ; //reçly ==  ERR_NOSUCHCHANNEL
 		if (userIdx == std::string::npos && nickName == "")
-			break;
+			return ; //ERR_NEEDMOREPARAMS
 		Client *user = getClient(nickName);
 		if (user == nullptr)
 			return ; //ERR_NOSUCHNICK
-		reply = channel->kickClient(client, *user, args.size() >= 3 ? args[2] : "");
-		return ;//reply
+		channel->kickClient(client, *user, args.size() >= 3 ? args[2] : "");
 	}
 	/*
 NOTE:
@@ -404,8 +403,7 @@ void placeholder::cmd_INVITE(Client &client, Args args)
 	Client *user = getClient(args[0]);
 		if (user == nullptr)
 			return ; //ERR_NOSUCHNICK
-	std::string reply =	channel->inviteClient(client, *user);
-	return ; //reply
+	channel->inviteClient(client, *user);
 	/*
 		Command: INVITE
    Parameters: <nickname> <channel>

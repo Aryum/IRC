@@ -1,8 +1,19 @@
 #include "Channel.hpp"
 
-ClientChannelStatus Channel::getClientStatus(Client &client)
+Channel::Channel(const Client &client,const std::string &name) :
+	_name(name),
+	_topicVal(),
+	_passwordVal(),
+	_clients(),
+	_inviteOnly(false),
+	_clientLimit(-1)
 {
-	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	_clients.insert(std::make_pair(&client, Status_Op));
+}
+
+ClientChannelStatus Channel::getClientStatus(const Client &client)
+{
+	std::map<const Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
 		if (&client == it->first)
@@ -13,47 +24,32 @@ ClientChannelStatus Channel::getClientStatus(Client &client)
 }
 
 
+
 //maybbe just return an int that will be read by the map reply
-std::string Channel::joinClient(Client &client, std::string password)
+void Channel::joinClient(Client &client, std::string password)
 {
-	ClientChannelStatus status = getClientStatus(client);
-	if (status != Status_None)
-		return; //ERR_USERONCHANNEL
-	if (_inviteOnly)
-	{
-		return ;//ERR_INVITEONLYCHAN
-	}
-	if (_clients.size() == _clientLimit)
-		return ; //ERR_CHANNELISFULL
-	else if (_passwordVal != "" && password != _passwordVal)
-		return ;//ERR_BADCHANNELKEY
+	_clientPassword = password;
+	Check checks[] {isOnChannel, isInviteOnly, fullChannel, checkKey, NULL};
+	if (hasError(client, checks))
+		return ;
 	_clients.insert(std::make_pair(&client, Status_Connected));
 }
 
-std::string Channel::partClient(Client &client)
+void Channel::partClient(Client &client)
 {
-	ClientChannelStatus status = getClientStatus(client);
-	if (status == Status_None)
-		return; //ERR_NOTONCHANNEL
+	if (!isOnChannel(client))
+		return ;
 	_clients.erase(&client);
 }
 
-std::string Channel::kickClient(Client &op, Client &user, std::string reason)
+void Channel::kickClient(Client &op, Client &user, std::string reason)
 {
-	ClientChannelStatus callerStatus = getClientStatus(op);
-	ClientChannelStatus targetStatus = getClientStatus(user);
-	//maybe needs to check if op is in the server as well
-	if (callerStatus != Status_Op)
-		return; //ERR_CHANOPRIVSNEEDED
-	if (targetStatus == Status_None)
-		return ; //ERR_NOTONCHANNEL
-	if (targetStatus == Status_Op)
-		return ; //op on op violence?
+	if (!isOperator(op) || !isOnChannel(user))
+		return;
 	_clients.erase(&user);
-	//maybe needs to check if user is already banned
 }
 
-std::string Channel::inviteClient(Client &op, Client &user)
+void Channel::inviteClient(Client &op, Client &user)
 {
 	ClientChannelStatus callerStatus = getClientStatus(op);
 	ClientChannelStatus userStatus = getClientStatus(user);
@@ -62,23 +58,27 @@ std::string Channel::inviteClient(Client &op, Client &user)
 		case Status_Op:
 			break;
 		case Status_Connected:
-			if (_inviteOnly)
-				return ; //ERR_CHANOPRIVSNEEDED
-			break;
+			if (!_inviteOnly)
+				break;
+			op.sendReply("ERR_CHANOPRIVSNEEDED");
+			return ;
 		default: //for none status
-			return ; //ERR_NOTONCHANNEL
+			op.sendReply("ERR_NOTONCHANNEL");
+			return ; 
 
 	}
 	if (userStatus != Status_None)
-		return ; //ERR_USERONCHANNEL
-	if (_clients.size() == _clientLimit)
-		return ; //ERR_CHANNELISFULL
-	return ; //RPL_INVITING
+		op.sendReply("ERR_NOTONCHANNEL");
+	else if (_clients.size() == _clientLimit)
+		op.sendReply("ERR_CHANNELISFULL");
+	else
+		op.sendReply("RPL_INVITING");
 	
 	//RPL_AWAY is sent check when itssent prob doesnt matter
 }
 
-std::string Channel::getTopic(Client &client)
+
+void Channel::getTopic(Client &client)
 {
 	ClientChannelStatus callerStatus = getClientStatus(client);
 	switch (callerStatus)
@@ -86,17 +86,19 @@ std::string Channel::getTopic(Client &client)
 		case Status_Op:
 			break;
 		case Status_Connected: //probably wrong
-			return; //ERR_CHANOPRIVSNEEDED
+			client.sendReply("ERR_CHANOPRIVSNEEDED");
+			return; 
 		default:
-			return;//ERR_NOTONCHANNEL
+			client.sendReply("ERR_NOTONCHANNEL");
+			return;
 	}
 	if (_topicVal == "")
-		return ; //RPL_NOTOPIC
-	return; //RPL_TOPIC_ topicSet
-
+		client.sendReply("RPL_NOTOPIC");
+	else
+		client.sendReply("RPL_TOPIC");
 }
 
-std::string Channel::changeTopic(Client &client, std::string topic)
+void Channel::changeTopic(Client &client, std::string topic)
 {
 	ClientChannelStatus callerStatus = getClientStatus(client);
 	switch (callerStatus)
@@ -111,6 +113,7 @@ std::string Channel::changeTopic(Client &client, std::string topic)
 	_topicVal = topic;
 	//prob neefds smt else
 }
+
 bool Channel::consumeArg(Args &args, size_t &cur, std::string &out)
 {
 	if (cur == args.size())
@@ -124,7 +127,7 @@ bool Channel::consumeArg(Args &args, size_t &cur, std::string &out)
 
 void Channel::toggleOp(std::string name, bool on)
 {
-	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	std::map<const Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
 		if (it->first->getNickName() == name)
@@ -146,7 +149,7 @@ ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
 
            ERR_USERSDONTMATCH              RPL_UMODEIS
            ERR_UMODEUNKNOWNFLAG*/
-std::string Channel::changeMode(Client &client, Args args)
+void Channel::changeMode(Client &client, Args args)
 {
 	switch(getClientStatus(client))
 	{

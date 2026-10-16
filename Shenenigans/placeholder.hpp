@@ -17,7 +17,7 @@
 
 class placeholder;
 typedef const std::vector<std::string>& Args;
-typedef std::map<std::string, void (placeholder::*)(Client &client, Args)> CmdMap;
+typedef std::map<std::string, void (placeholder::*)(Client &, Args)> CmdMap;
 typedef std::map<int, Client*> ClientMap;
 
 class placeholder

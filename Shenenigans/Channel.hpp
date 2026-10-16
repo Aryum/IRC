@@ -11,40 +11,45 @@ enum ClientChannelStatus
 	Status_Op,
 	Status_None
 };
+class Channel;
 
+typedef bool (Channel::*Check)(const Client &a);
 
 class Channel
 {
 	public:
-		Channel();
+		Channel(const Client &client,const std::string &name);
 
 
 		std::string  getName();
 
-		//returns reply
-		std::string joinClient(Client &client, std::string password);
-		std::string kickClient(Client &op, Client &user, std::string reason);
-		std::string partClient(Client &client);
-		std::string changeTopic(Client &client, std::string topic);
-		std::string getTopic(Client &client);
-		std::string changeMode(Client &client, Args args);
-
-		std::string Channel::inviteClient(Client &op, Client &user);
-
+		void joinClient(Client &client, std::string password);
+		void kickClient(Client &op, Client &user, std::string reason);
+		void partClient(Client &client);
+		void changeTopic(Client &client, std::string topic);
+		void getTopic(Client &client);
+		void changeMode(Client &client, Args args);
+		void inviteClient(Client &op, Client &user);
+		ClientChannelStatus getClientStatus(const Client &client);
 		void broadcastMessage(std::string message);
 		bool isInviteOnly();
-		bool comparePassword(std::string); // if it has none just accept else compare
-		ClientChannelStatus getClientStatus(Client &client);
 	
 	private:
 		std::string _name;
 		std::string _topicVal;
 		std::string _passwordVal;
-		std::map<Client*, ClientChannelStatus> _clients;
-		bool consumeArg(Args &args, size_t &cur, std::string &out);
-		void toggleOp(std::string name, bool on);
-
+		std::string _clientPassword;
+		std::map<const Client*, ClientChannelStatus> _clients;
 		bool _inviteOnly;
 		int _clientLimit;
+		
+		bool consumeArg(Args &args, size_t &cur, std::string &out);
+		void toggleOp(std::string name, bool on);
+		bool isOnChannel(const Client &c);
+		bool isOperator(const Client &c);
+		bool fullChannel(const Client &c);
+		bool isInviteOnly(const Client &c);
+		bool checkKey(const Client &c);
+		bool hasError(const Client &c, Check *checks);
 };
 #endif

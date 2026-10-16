@@ -12,8 +12,8 @@ class Client
 		bool operator==(const Client &other) const;
 		int getSocket();
 		void setNames(std::string user, std::string host, std::string server, std::string real);
-		std::string getNickName();
-
+		std::string getNickName() const;
+		void sendReply(std::string reply) const;
 
 	private:
 		std::string _userName;
