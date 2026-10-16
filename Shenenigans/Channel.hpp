@@ -39,10 +39,12 @@ class Channel
 	private:
 		std::string _name;
 		std::string _topicVal;
-		bool _topicSet;
 		std::string _passwordVal;
-		bool _passwordSet;
 		std::map<Client*, ClientChannelStatus> _clients;
+		bool consumeArg(Args &args, size_t &cur, std::string &out);
+		void toggleOp(std::string name, bool on);
+
 		bool _inviteOnly;
+		int _clientLimit;
 };
 #endif

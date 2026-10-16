@@ -16,10 +16,7 @@ void placeholder::createMap()
 	_cmd["INVITE"] = &placeholder::cmd_INVITE;
 	_cmd["TOPIC"] = &placeholder::cmd_TOPIC;
 	_cmd["MODE"] = &placeholder::cmd_MODE;
-
-
 }
-
 
 
 void placeholder::call_cmd(Client &client, std::string input)
@@ -63,6 +60,6 @@ void placeholder::call_cmd(Client &client, std::string input)
 	return;
 	CmdMap::iterator it = _cmd.find(command);
 	if (it == _cmd.end())
-		throw std::runtime_error(command + "  not found"); //its not a runtime error btw
+		throw Reply(command + "  not found"); 
 	(this->*(it->second))(client, params);
 }

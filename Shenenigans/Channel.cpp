@@ -17,23 +17,17 @@ ClientChannelStatus Channel::getClientStatus(Client &client)
 std::string Channel::joinClient(Client &client, std::string password)
 {
 	ClientChannelStatus status = getClientStatus(client);
-	switch (status)
-	{
-		case Status_None:
-			break;
-		default:
-			return; //ERR_USERONCHANNEL
-	}
+	if (status != Status_None)
+		return; //ERR_USERONCHANNEL
 	if (_inviteOnly)
 	{
-		//ERR_INVITEONLYCHAN
+		return ;//ERR_INVITEONLYCHAN
 	}
-	else if (!_passwordSet || password == _passwordVal)
-		_clients.insert(std::make_pair(&client, Status_Connected));
-	else
-	{
-		//ERR_BADCHANNELKEY
-	}
+	if (_clients.size() == _clientLimit)
+		return ; //ERR_CHANNELISFULL
+	else if (_passwordVal != "" && password != _passwordVal)
+		return ;//ERR_BADCHANNELKEY
+	_clients.insert(std::make_pair(&client, Status_Connected));
 }
 
 std::string Channel::partClient(Client &client)
@@ -75,14 +69,13 @@ std::string Channel::inviteClient(Client &op, Client &user)
 			return ; //ERR_NOTONCHANNEL
 
 	}
-	switch (userStatus)
-	{
-		case Status_None:
-			return ; //RPL_INVITING
-		default:
-			return ; //ERR_USERONCHANNEL
-	}
-	//RPL_AWAY is sent check when
+	if (userStatus != Status_None)
+		return ; //ERR_USERONCHANNEL
+	if (_clients.size() == _clientLimit)
+		return ; //ERR_CHANNELISFULL
+	return ; //RPL_INVITING
+	
+	//RPL_AWAY is sent check when itssent prob doesnt matter
 }
 
 std::string Channel::getTopic(Client &client)
@@ -92,14 +85,14 @@ std::string Channel::getTopic(Client &client)
 	{
 		case Status_Op:
 			break;
-		case Status_Connected:
+		case Status_Connected: //probably wrong
 			return; //ERR_CHANOPRIVSNEEDED
 		default:
 			return;//ERR_NOTONCHANNEL
 	}
-	if (_topicSet)
-		return ; //RPL_TOPIC
-	return;  //RPL_NOTOPIC
+	if (_topicVal == "")
+		return ; //RPL_NOTOPIC
+	return; //RPL_TOPIC_ topicSet
 
 }
 
@@ -108,22 +101,115 @@ std::string Channel::changeTopic(Client &client, std::string topic)
 	ClientChannelStatus callerStatus = getClientStatus(client);
 	switch (callerStatus)
 	{
-		case Status_Op:
-			break;
+		case Status_None:
+			return;//ERR_NOTONCHANNEL
 		case Status_Connected:
 			return; //ERR_CHANOPRIVSNEEDED
 		default:
-			return;//ERR_NOTONCHANNEL
+			break;
 	}
-	_topicSet = true;
 	_topicVal = topic;
 	//prob neefds smt else
-
 }
+bool Channel::consumeArg(Args &args, size_t &cur, std::string &out)
+{
+	if (cur == args.size())
+	{
+		return false; //ERR_NEEDMOREPARAMS
+	}
+	out = args[cur];
+	cur++;
+	return true;
+}
+
+void Channel::toggleOp(std::string name, bool on)
+{
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	while (it != _clients.end())
+	{
+		if (it->first->getNickName() == name)
+		{
+			it->second = on ? Status_Op: Status_Connected;
+			return ;
+		}
+		it++; //ERR_NOTONCHANNEL
+	}
+	return ;
+}
+
+/*
+ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
+           ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK
+           ERR_NOTONCHANNEL                ERR_KEYSET
+           RPL_BANLIST                     RPL_ENDOFBANLIST
+           ERR_UNKNOWNMODE                 
+
+           ERR_USERSDONTMATCH              RPL_UMODEIS
+           ERR_UMODEUNKNOWNFLAG*/
 std::string Channel::changeMode(Client &client, Args args)
 {
+	switch(getClientStatus(client))
+	{
+		case Status_None:
+			return ; //ERR_NOTONCHANNEL
+		case Status_Connected:
+			return ; //ERR_CHANOPRIVSNEEDED
+		default:
+			break;
+	}
+	bool adding = true;
+	size_t curParam = 2;
+	for (size_t i = 0; args[1][i] != '\0'; i++)
+	{
+		if (args[1][i] == '+' || args[1][i] == '-')
+		{
+			adding = args[1][i] == '+';
+			continue ;
+		}
+		std::string var;
+		switch (args[1][i])
+		{
+			case 'i':
+				_inviteOnly = adding;
+				break;
+			case 't':
+				if (adding)
+					consumeArg(args, curParam, _topicVal);
+				else
+					_topicVal = "";
+				break;
+			case 'k':
+				if (adding)
+					consumeArg(args, curParam,_passwordVal);
+				else
+					_passwordVal = "";
+				break;
+			case 'o':
+				//this allows for op on op shenenignas
+				if (consumeArg(args, curParam, var))
+					toggleOp(var, adding);
+				break;
+			case 'l':
+				if (adding && consumeArg(args, curParam, var))
+					_clientLimit = atoi(var.c_str());
+				else
+					_clientLimit = -1;
+				break;
+			default:
+				//ERR_UNKNOWNMODE
+				break;
+
+		}
+	}
+
+
 	//args are checked here, it passes MODE as well, remember to ignore 0
 	/*
+			i - invite-only channel flag;
+           t - topic settable by channel operator only flag;
+		   k - set a channel key (password).
+           o - give/take channel operator privileges;
+        	   l - set the user limit to channel;
    Yes. A single MODE command can carry several mode changes in one modestring, and the parameters are consumed left to right by whichever modes need them.
 
 MODE #chan +itk secret          ; +i, +t, and key "secret"

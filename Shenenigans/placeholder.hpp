@@ -13,12 +13,11 @@
 #include <vector>
 #include "Client.hpp"
 #include "Channel.hpp"
-
+#include "Reply.hpp"
 
 class placeholder;
 typedef const std::vector<std::string>& Args;
 typedef std::map<std::string, void (placeholder::*)(Client &client, Args)> CmdMap;
-typedef std::map<int, void (placeholder::*)()> ReplyMap;
 typedef std::map<int, Client*> ClientMap;
 
 class placeholder
@@ -34,7 +33,6 @@ class placeholder
 		ClientMap _clients;
 		std::vector<Channel> _channels;
 		CmdMap _cmd;
-		ReplyMap _rpl;
 		
 		void createMap();
 		void cmd_PASS(Client &client, Args args);
