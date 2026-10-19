@@ -18,19 +18,6 @@ void Server::create_cmdMap()
 	_cmd["MODE"] = &Server::cmd_MODE;
 }
 
-void Server::create_replyMap()
-{
-	_replies[ERR_ALREADYREGISTRED] = &Server::err_ALREADYREGISTRED;
-	_replies[ERR_NEEDMOREPARAMS] = &Server::err_NEEDMOREPARAMS;
-	_replies[ERR_NICKCOLLISION] = &Server::err_NICKCOLLISION;
-	_replies[ERR_NONICKNAMEGIVEN] = &Server::err_NONICKNAMEGIVEN;
-	_replies[ERR_NOSUCHCHANNEL] = &Server::err_NOSUCHCHANNEL;
-	_replies[ERR_NOSUCHNICK] = &Server::err_NOSUCHNICK;
-	_replies[RPL_NOTOPIC] = &Server::rpl_NOTOPIC;
-	_replies[RPL_TOPIC] = &Server::rpl_TOPIC;
-}
-
-
 void Server::call_cmd(Client &client, std::string input)
 {
 	size_t spaceIdx = 0;
@@ -72,6 +59,6 @@ void Server::call_cmd(Client &client, std::string input)
 	return;
 	CmdMap::iterator it = _cmd.find(command);
 	if (it == _cmd.end())
-		client.sendReply(command + "  not found"); // aint like this obv
+		return err_UNKNOWNCOMMAND(client, command);
 	(this->*(it->second))(client, params);
 }

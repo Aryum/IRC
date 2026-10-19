@@ -1,13 +1,13 @@
 #include "Server.hpp"
+//starting commands should throw an exception to close client
 void Server::cmd_PASS(Client &client, Args args)
 {
 	if (_clients.find(client.getSocket()) != _clients.end())
-		client.sendReply("ERR_ALREADYREGISTRED");
+		return err_ALREADYREGISTRED(client);
 	else if (args.size() == 0)
-		err_NEEDMOREPARAMS(client, EmptyArgs());
-		return ; 
-	if (args[0] == _password)
-		return ; //NICK CMD check how  is it going to work
+		return err_NEEDMOREPARAMS(client, "PASS");
+	if (args[0] != _password)
+		return err_PASSWDMISMATCH(client);
 	
 	/* 
 
@@ -36,10 +36,7 @@ void Server::cmd_PASS(Client &client, Args args)
 void Server::cmd_NICK(Client &client, Args args)
 {
 	if (args.size() == 0)
-	{
-		client.sendReply("ERR_NONICKNAMEGIVEN");
-		return ; 
-	}
+		return err_NONICKNAMEGIVEN(client);
 	
 	ClientMap::iterator it = _clients.begin();
 	bool newConnection = false;
@@ -48,17 +45,12 @@ void Server::cmd_NICK(Client &client, Args args)
 		if (it->first == client.getSocket())
 			newConnection = false;
 		if (it->second->getNickName() == args[0])
-		{
-			client.sendReply("ERR_NICKCOLLISION");
-			return ;
-		}
+			return err_NICKCOLLISION(client, args[0]);
 		it++;
 	}
 
 	if (!newConnection)
 		return ;//replace name prob just change &client
-	else
-		return ;//USER CMD;
 	/*
 	Command: NICK
    Parameters: <nickname> [ <hopcount> ]
@@ -95,18 +87,12 @@ void Server::cmd_NICK(Client &client, Args args)
 void Server::cmd_USER(Client &client, Args args)
 {
 	if (args.size() < 4)
-	{
-		client.sendReply("ERR_NEEDMOREPARAMS");
-		return ;
-	}
+		return err_NEEDMOREPARAMS(client, "USER");
 	ClientMap::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
 		if (it->first == client.getSocket())
-		{
-			client.sendReply("ERR_ALREADYREGISTRED");
-			return ;
-		}
+			return err_ALREADYREGISTRED(client);
 		it++;
 	}
 	client.setNames(args[0], args[1], args[2], args[3]);
@@ -222,7 +208,7 @@ void Server::cmd_JOIN(Client &client, Args args)
 {
 	if (args.size() < 1)
 	{
-		client.sendReply("ERR_NEEDMOREPARAMS");
+		err_NEEDMOREPARAMS(client, "JOIN");
 		return ;
 	}
 	size_t channelIdx = 0;
@@ -296,13 +282,15 @@ void Server::cmd_JOIN(Client &client, Args args)
 	
 	*/
 }
-
+/*
+	cmd params
+*/
 
 void Server::cmd_PART(Client &client, Args args)
 {
 	if (args.size() < 1)
 	{
-		client.sendReply("ERR_NEEDMOREPARAMS");
+		err_NEEDMOREPARAMS(client, "PART");
 		return ;
 	}
 	size_t channelIdx = 0;
@@ -339,10 +327,7 @@ void Server::cmd_PART(Client &client, Args args)
 void Server::cmd_KICK(Client &client, Args args)
 {
 	if (args.size() < 2)
-	{
-		client.sendReply("ERR_NEEDMOREPARAMS");
-		return ;
-	}
+		return err_NEEDMOREPARAMS(client, "KICK");
 
 	size_t channelIdx = 0;
 	size_t userIdx = 0;
@@ -407,10 +392,7 @@ following:
 void Server::cmd_INVITE(Client &client, Args args)
 {
 	if (args.size() < 2)
-	{
-		client.sendReply("ERR_NEEDMOREPARAMS");
-		return ;
-	}
+		return err_NEEDMOREPARAMS(client, "INVITE");
 	Client *user = nullptr;
 	Channel *channel = nullptr;
 	if (!getClient(client, args[1], &user) || !getChannel(client, args[2], &channel))
@@ -448,13 +430,10 @@ void Server::cmd_INVITE(Client &client, Args args)
 void Server::cmd_TOPIC(Client &client, Args args)
 {
 	if (args.size() < 1)
-	{
-		client.sendReply("ERR_NEEDMOREPARAMS");
-		return ;
-	}
+		return err_NEEDMOREPARAMS(client, "TOPIC");
 	Channel *channel = nullptr;
 	if (!getChannel(client, args[0], &channel))
-		return ; //ERR_NOSUCHCHANNEL
+		return ;
 	if (args.size() == 1)
 		channel->getTopic(client);
 	else
@@ -487,13 +466,10 @@ void Server::cmd_TOPIC(Client &client, Args args)
 void Server::cmd_MODE(Client &client, Args args)
 {
 	if (args.size() < 2)
-	{
-		client.sendReply("ERR_NEEDMOREPARAMS");
-		return ;
-	}
+		return err_NEEDMOREPARAMS(client, "MODE");
 	Channel *channel = nullptr;
 	if (!getChannel(client, args[0], &channel))
-		return ; //ERR_NOSUCHCHANNEL
+		return ;
 	channel->changeMode(client, args);
 
 
@@ -588,30 +564,4 @@ MODE WiZ -o                     ; WiZ 'deopping' (removing operator
                                 the OPER command.
 	*/
 
-}
-
-void Server::cmd_LIST(Client &client, Args args)
-{
-	/*
-	Command: LIST
-   Parameters: [<channel>{,<channel>} [<server>]]
-
-   The list message is used to list channels and their topics.  If  the
-   <channel>  parameter  is  used,  only  the  status  of  that  channel
-   is displayed.  Private  channels  are  listed  (without  their
-   topics)  as channel "Prv" unless the client generating the query is
-   actually on that channel.  Likewise, secret channels are not listed
-   at  all  unless  the client is a member of the channel in question.
-
-   Numeric Replies:
-
-           ERR_NOSUCHSERVER                RPL_LISTSTART
-           RPL_LIST                        RPL_LISTEND
-
-   Examples:
-
-   LIST                            ; List all channels.
-
-   LIST #twilight_zone,#42         ; List channels #twilight_zone and #42
-	*/
 }

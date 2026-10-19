@@ -54,7 +54,7 @@ void Channel::inviteClient(Client &op, Client &user)
 	Check checks[] {check_canInvite, check_fullChannel, NULL};
 	if (checkMultiple(op, checks) || check_isOnChannel(user))
 		return ;
-	op.sendReply("RPL_INVITING");
+	rpl_INVITING(op, user.getNickName(), _name);
 }
 
 
@@ -64,9 +64,9 @@ void Channel::getTopic(Client &client)
 	if (!check_isOperator(client))
 		return ;
 	if (_topicVal == "")
-		client.sendReply("RPL_NOTOPIC");
+		rpl_NOTOPIC(client, _name);
 	else
-		client.sendReply("RPL_TOPIC");
+		rpl_TOPIC(client, _name, _topicVal);
 }
 
 void Channel::changeTopic(Client &client, std::string topic)
@@ -77,13 +77,10 @@ void Channel::changeTopic(Client &client, std::string topic)
 	//prob neefds smt else
 }
 
-bool Channel::consumeArg(Client &client, CmdArgs &args, size_t &cur, std::string &out)
+bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &out)
 {
 	if (cur == args.size())
-	{
-		client.sendReply("ERR_NEEDMOREPARAMS");
-		return false; 
-	}
+		return (err_NEEDMOREPARAMS(client, "MODE"), false); 
 	out = args[cur];
 	cur++;
 	return true;
@@ -102,8 +99,7 @@ void Channel::toggleOp(Client &client, std::string name, bool on)
 		}
 		it++;
 	}
-	client.sendReply("ERR_NOTONCHANNEL");
-	return ;
+	return err_NOTONCHANNEL(client, _name);
 }
 
 /*
@@ -115,7 +111,7 @@ ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
 
            ERR_USERSDONTMATCH              RPL_UMODEIS
            ERR_UMODEUNKNOWNFLAG*/
-void Channel::changeMode(Client &client, CmdArgs args)
+void Channel::changeMode(Client &client, Args args)
 {
 	if (!check_isOperator(client))
 		return;
@@ -158,7 +154,7 @@ void Channel::changeMode(Client &client, CmdArgs args)
 					_clientLimit = -1;
 				break;
 			default:
-				client.sendReply("ERR_UNKNOWNMODE");
+				err_UNKNOWNMODE(client, args[1][i]);
 				break;
 
 		}

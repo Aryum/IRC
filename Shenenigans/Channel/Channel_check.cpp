@@ -14,54 +14,62 @@
 	ERR_USERONCHANNEL
 	ERR_USERSDONTMATCH
 */
-static bool check(const Client &c, bool condition, const std::string &msg)
-{
-	if (!condition)
-		c.sendReply(msg);
-	return condition;
-}
+
 
 bool Channel::checkMultiple(const Client &c, Check *checks)
 {
 	for (size_t i = 0; checks[i] != NULL; i++)
 	{
 		if (!(this->*checks[i])(c))
-			return(true);
+			return(false);
 	}
-	return false;
+	return true;
 }
 
 bool Channel::check_isOnChannel(const Client &c)
 {
-	return check(c, getClientStatus(c) != Status_None, "ERR_NOTONCHANNEL");
+	if (getClientStatus(c) == Status_None)
+		return (err_NOTONCHANNEL(c, _name), false);
+	return true;
 }
 
 
 bool Channel::check_isOperator(const Client &c)
 {
 	ClientChannelStatus status = getClientStatus(c);
-	if (!check(c, status != Status_None, "ERR_NOTONCHANNEL"))
-		return false;
-	return check(c, status == Status_Op, "ERR_CHANOPRIVSNEEDED");
+	switch (status)
+	{
+		case Status_None:
+			return (err_NOTONCHANNEL(c, _name), false);
+		case Status_Connected:
+			return (err_CHANOPRIVSNEEDED(c, _name), false);
+		default:
+			return true;
+	}
 }
-
 bool Channel::check_fullChannel(const Client &c)
 {
-	return (check(c, _clientLimit != _clients.size(), "ERR_CHANNELISFULL"));
+	if (_clientLimit == _clients.size())
+		return (err_CHANNELISFULL(c, _name), false);
+	return true;
+
+
 }
 
 bool Channel::check_canInvite(const Client &c)
 {
 	ClientChannelStatus status = getClientStatus(c);
-	if (!check(c, status != Status_None, "ERR_NOTONCHANNEL"))
-		return false;
-	if (_inviteOnly)
-		return (check(c, status == Status_Op, "ERR_INVITEONLYCHAN"));
+	if (status == Status_None)
+		return (err_NOTONCHANNEL(c, _name), false);
+	if (_inviteOnly && status != Status_Op)
+		return (err_CHANOPRIVSNEEDED(c, _name), false);
 	return true;
 }
 
 bool Channel::check_key(const Client &c)
 {
-	return (check(c, _passwordVal == "" || _clientPassword == _passwordVal, "ERR_BADCHANNELKEY"));
+	if (_passwordVal != "" && _clientPassword != _passwordVal)
+		return (err_BADCHANNELKEY(c, _name), false);
+	return true;
 }
 

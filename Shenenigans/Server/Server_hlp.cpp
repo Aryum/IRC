@@ -22,6 +22,7 @@ std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 	return ret;
 }
 
+//already sends message if doesnt find
 Channel *Server::getChannel(std::string name)
 {
 	std::vector<Channel>::iterator it = _channels.begin();
@@ -34,12 +35,12 @@ Channel *Server::getChannel(std::string name)
 	}
 	return nullptr;
 }
-
+//already sends message if doesnt find
 bool Server::getChannel(Client &client, std::string name, Channel **out)
 {
 	*out = getChannel(name);
 	if (*out == nullptr)
-		client.sendReply("ERR_NOSUCHCHANNEL");
+		err_NOSUCHCHANNEL(client, name);
 	return (*out != nullptr);
 }
 //if we change to throw system, this should throw a reply nosuch user or wtv
@@ -57,7 +58,6 @@ bool Server::getClient(Client &client, std::string name, Client **out)
 		}
 		it++;
 	}
-	client.sendReply("ERR_NOSUCHNICK");
-
+	err_NOSUCHNICK(client, name);
 	return false;
 }

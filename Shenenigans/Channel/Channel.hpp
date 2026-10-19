@@ -27,7 +27,7 @@ class Channel
 		void partClient(Client &client);
 		void changeTopic(Client &client, std::string topic);
 		void getTopic(Client &client);
-		void changeMode(Client &client, CmdArgs args);
+		void changeMode(Client &client, Args args);
 		void inviteClient(Client &op, Client &user);
 		ClientChannelStatus getClientStatus(const Client &client);
 		void broadcastMessage(std::string message);
@@ -42,7 +42,7 @@ class Channel
 		bool _inviteOnly;
 		int _clientLimit;
 		
-		bool consumeArg(Client &client, CmdArgs &args, size_t &cur, std::string &out);
+		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
 		void toggleOp(std::string name, bool on);
 		void toggleOp(Client &client, std::string name, bool on);
 		bool check_isOnChannel(const Client &c);
