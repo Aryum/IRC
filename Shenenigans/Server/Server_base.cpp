@@ -2,10 +2,10 @@
 
 Server::Server()
 {
-	createMap();
+	create_cmdMap();
 }
 
-void Server::createMap()
+void Server::create_cmdMap()
 {
 	_cmd["PASS"] = &Server::cmd_PASS;
 	_cmd["NICK"] = &Server::cmd_NICK;
@@ -16,6 +16,18 @@ void Server::createMap()
 	_cmd["INVITE"] = &Server::cmd_INVITE;
 	_cmd["TOPIC"] = &Server::cmd_TOPIC;
 	_cmd["MODE"] = &Server::cmd_MODE;
+}
+
+void Server::create_replyMap()
+{
+	_replies[ERR_ALREADYREGISTRED] = &Server::err_ALREADYREGISTRED;
+	_replies[ERR_NEEDMOREPARAMS] = &Server::err_NEEDMOREPARAMS;
+	_replies[ERR_NICKCOLLISION] = &Server::err_NICKCOLLISION;
+	_replies[ERR_NONICKNAMEGIVEN] = &Server::err_NONICKNAMEGIVEN;
+	_replies[ERR_NOSUCHCHANNEL] = &Server::err_NOSUCHCHANNEL;
+	_replies[ERR_NOSUCHNICK] = &Server::err_NOSUCHNICK;
+	_replies[RPL_NOTOPIC] = &Server::rpl_NOTOPIC;
+	_replies[RPL_TOPIC] = &Server::rpl_TOPIC;
 }
 
 

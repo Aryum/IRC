@@ -77,7 +77,7 @@ void Channel::changeTopic(Client &client, std::string topic)
 	//prob neefds smt else
 }
 
-bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &out)
+bool Channel::consumeArg(Client &client, CmdArgs &args, size_t &cur, std::string &out)
 {
 	if (cur == args.size())
 	{
@@ -115,7 +115,7 @@ ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
 
            ERR_USERSDONTMATCH              RPL_UMODEIS
            ERR_UMODEUNKNOWNFLAG*/
-void Channel::changeMode(Client &client, Args args)
+void Channel::changeMode(Client &client, CmdArgs args)
 {
 	if (!check_isOperator(client))
 		return;

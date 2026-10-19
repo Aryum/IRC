@@ -4,7 +4,7 @@ void Server::cmd_PASS(Client &client, Args args)
 	if (_clients.find(client.getSocket()) != _clients.end())
 		client.sendReply("ERR_ALREADYREGISTRED");
 	else if (args.size() == 0)
-		client.sendReply("ERR_NEEDMOREPARAMS");
+		err_NEEDMOREPARAMS(client, EmptyArgs());
 		return ; 
 	if (args[0] == _password)
 		return ; //NICK CMD check how  is it going to work
