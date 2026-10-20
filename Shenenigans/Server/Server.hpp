@@ -27,11 +27,13 @@ class Server
 		std::string _password;
 		std::vector<pollfd> _sockets; //client + server
 		std::vector<Channel> _channels;
+		std::string _date;
 		ClientMap _clients;
 		CmdMap _cmd;
 
 		void create_cmdMap();
 
+		std::string getDate() const;
 		void cmd_PASS(Client &client, Args args);
 		void cmd_NICK(Client &client, Args args);
 		void cmd_USER(Client &client, Args args);

@@ -2,13 +2,17 @@
 //starting commands should throw an exception to close client
 void Server::cmd_PASS(Client &client, Args args)
 {
-	if (_clients.find(client.getSocket()) != _clients.end())
+	if (client.registred())
 		return err_ALREADYREGISTRED(client);
 	else if (args.size() == 0)
 		return err_NEEDMOREPARAMS(client, "PASS");
 	if (args[0] != _password)
 		return err_PASSWDMISMATCH(client);
-	
+	client.correctPassword();
+
+
+	//send welcome?
+
 	/* 
 
 	Command: PASS
@@ -37,20 +41,24 @@ void Server::cmd_NICK(Client &client, Args args)
 {
 	if (args.size() == 0)
 		return err_NONICKNAMEGIVEN(client);
-	
+	if (args[0].length() < 1 || args[0].length() > 9)
+		return err_ERRONEUSNICKNAME(client, args[0]);
+	char c = args[0][0];
+	if (!std::isalpha(c) && c != '_' && c != '.')
+		return err_ERRONEUSNICKNAME(client, args[0]);
 	ClientMap::iterator it = _clients.begin();
 	bool newConnection = false;
 	while (it != _clients.end())
 	{
 		if (it->first == client.getSocket())
 			newConnection = false;
-		if (it->second->getNickName() == args[0])
-			return err_NICKCOLLISION(client, args[0]);
+		if (it->second->get(Name_Nick) == args[0])
+			return err_NICKNAMEINUSE(client, args[0]);
 		it++;
 	}
-
-	if (!newConnection)
-		return ;//replace name prob just change &client
+	client.setNames(Name_Nick, args[0]);
+	if (client.registred())
+		rpl_WELCOME(client, _date);
 	/*
 	Command: NICK
    Parameters: <nickname> [ <hopcount> ]
@@ -95,7 +103,10 @@ void Server::cmd_USER(Client &client, Args args)
 			return err_ALREADYREGISTRED(client);
 		it++;
 	}
-	client.setNames(args[0], args[1], args[2], args[3]);
+	client.setNames(Name_User, args[0]);
+	client.setNames(Name_Host, args[1]);
+	client.setNames(Name_Nick, args[3]);
+
 	_clients.insert(std::make_pair(client.getSocket(), &client));
 	//actually add to client list at the end of this cmd
 	/*

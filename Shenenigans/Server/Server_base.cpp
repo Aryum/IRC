@@ -2,11 +2,6 @@
 
 Server::Server()
 {
-	create_cmdMap();
-}
-
-void Server::create_cmdMap()
-{
 	_cmd["PASS"] = &Server::cmd_PASS;
 	_cmd["NICK"] = &Server::cmd_NICK;
 	_cmd["USER"] = &Server::cmd_USER;
@@ -16,6 +11,14 @@ void Server::create_cmdMap()
 	_cmd["INVITE"] = &Server::cmd_INVITE;
 	_cmd["TOPIC"] = &Server::cmd_TOPIC;
 	_cmd["MODE"] = &Server::cmd_MODE;
+
+	time_t t = time(NULL);
+	_date = ctime(&t);
+}
+
+std::string Server::getDate() const
+{
+	return _date;
 }
 
 void Server::call_cmd(Client &client, std::string input)
