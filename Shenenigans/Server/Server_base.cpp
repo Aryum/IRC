@@ -11,7 +11,7 @@ Server::Server()
 	_cmd["INVITE"] = &Server::cmd_INVITE;
 	_cmd["TOPIC"] = &Server::cmd_TOPIC;
 	_cmd["MODE"] = &Server::cmd_MODE;
-
+	_cmd["PRIVMSG"] = &Server::cmd_PRIVMSG;
 	time_t t = time(NULL);
 	_date = ctime(&t);
 }

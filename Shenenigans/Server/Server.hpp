@@ -10,6 +10,25 @@
 #include <map>
 #include <iostream>
 
+#define ALLOWEDSPECIAL 
+/*
+<target>     ::= <to> [ "," <target> ]
+   <to>         ::= <channel> | <user> '@' <servername> | <nick> | <mask>
+   <channel>    ::= ('#' | '&') <chstring>
+   <servername> ::= <host>
+   <host>       ::= see RFC 952 [DNS:4] for details on allowed hostnames
+   <nick>       ::= <letter> { <letter> | <number> | <special> }
+   <mask>       ::= ('#' | '$') <chstring>
+   <chstring>   ::= <any 8bit code except SPACE, BELL, NUL, CR, LF and
+                     comma (',')>
+
+   Other parameter syntaxes are:
+
+   <user>       ::= <nonwhite> { <nonwhite> }
+   <letter>     ::= 'a' ... 'z' | 'A' ... 'Z'
+   <number>     ::= '0' ... '9'
+   <special>    ::= -[]\\`^{}
+*/
 class Server;
 typedef const std::vector<std::string>& Args;
 typedef std::vector<std::string> EmptyArgs;
@@ -38,14 +57,13 @@ class Server
 		void cmd_NICK(Client &client, Args args);
 		void cmd_USER(Client &client, Args args);
 		void cmd_PART(Client &client, Args args);
-		void cmd_LIST(Client &client, Args args);
 		void cmd_QUIT(Client &client, Args args);
 		void cmd_JOIN(Client &client, Args args);
 		void cmd_KICK(Client &client, Args args);
 		void cmd_INVITE(Client &client, Args args);
 		void cmd_TOPIC(Client &client, Args args);
 		void cmd_MODE(Client &client, Args args);
-
+		void cmd_PRIVMSG(Client &client, Args args);
 		
 		
 		//move to its own helper file, it contains all the system headers as well

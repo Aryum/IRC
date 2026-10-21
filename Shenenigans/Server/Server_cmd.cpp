@@ -10,14 +10,30 @@ void Server::cmd_PASS(Client &client, Args args)
 	client.setPasswordVerified();
 }
 
+static bool parseNick(std::string name)
+{
+	if (!std::isalpha(name[0]))
+		return false;
+	std::string allowed = "-[]\\`^{}";
+	for (size_t i = 1; i < name.size(); i++)
+	{
+		if (std::isalpha(name[i]))
+			continue;
+		if (std::isdigit(name[i]))
+			continue;
+		if (allowed.find(name[i]) != std::string::npos)
+			continue;
+		return false;
+	}
+	return true;
+}
 void Server::cmd_NICK(Client &client, Args args)
 {
 	if (args.size() == 0)
 		return err_NONICKNAMEGIVEN(client);
 	if (args[0].length() < 1 || args[0].length() > 9)
 		return err_ERRONEUSNICKNAME(client, args[0]);
-	char c = args[0][0];
-	if (!std::isalpha(c) && c != '_' && c != '.')
+	if (parseNick(args[0]))
 		return err_ERRONEUSNICKNAME(client, args[0]);
 	ClientMap::iterator it = _clients.begin();
 	bool newConnection = false;
@@ -70,13 +86,15 @@ void Server::cmd_QUIT(Client &client, Args args)
 	//close connection
 }
 
+static bool parseChannel(std::string name)
+{
+
+}
+
 void Server::cmd_JOIN(Client &client, Args args)
 {
 	if (args.size() < 1)
-	{
-		err_NEEDMOREPARAMS(client, "JOIN");
-		return ;
-	}
+		return err_NEEDMOREPARAMS(client, "JOIN");
 	size_t channelIdx = 0;
 	size_t keyIdx = 0;
 
@@ -85,12 +103,17 @@ void Server::cmd_JOIN(Client &client, Args args)
 		std::string name = nextChar(args[0], channelIdx, ',', true);
 		std::string password = nextChar(args[0], channelIdx, ',', true);
 
-		Channel *channel = getChannel(name);
-		std::string reply;
-		if (channel == nullptr)
-			_channels.push_back(Channel(client, name));
+		if (name[0] != '&' || name[0] != '#' || name.size() > 200)
+			err_NOSUCHCHANNEL(client, name);
 		else
-			channel->joinClient(client, password);
+		{
+			Channel *channel = getChannel(name);
+			std::string reply;
+			if (channel == nullptr)
+				_channels.push_back(Channel(client, name));
+			else
+				channel->joinClient(client, password);
+		}
 		
 	}
 }
@@ -169,4 +192,40 @@ void Server::cmd_MODE(Client &client, Args args)
 	if (!getChannel(client, args[0], &channel))
 		return ;
 	channel->changeMode(client, args);
+}
+
+void Server::cmd_PRIVMSG(Client &client, Args args)
+{
+	
+	
+	size_t targetIdx = 0;
+
+	/*
+
+      Command: PRIVMSG
+   Parameters: <receiver>{,<receiver>} <text to be sent>
+
+   PRIVMSG is used to send private messages between users.  <receiver>
+   is the nickname of the receiver of the message.  <receiver> can also
+   be a list of names or channels separated with commas.
+
+   The <receiver> parameter may also me a host mask  (#mask)  or  server
+   mask  ($mask).   In  both cases the server will only send the PRIVMSG
+   to those who have a server or host matching the mask.  The mask  must
+   have at  least  1  (one)  "."  in it and no wildcards following the
+   last ".".  This requirement exists to prevent people sending messages
+   to  "#*"  or "$*",  which  would  broadcast  to  all  users; from
+   experience, this is abused more than used responsibly and properly.
+   Wildcards are  the  '*' and  '?'   characters.   This  extension  to
+   the PRIVMSG command is only available to Operators.
+
+   Numeric Replies:
+
+           ERR_NORECIPIENT                 ERR_NOTEXTTOSEND
+           ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
+           ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
+           ERR_NOSUCHNICK
+           RPL_AWAY
+	
+	*/
 }
