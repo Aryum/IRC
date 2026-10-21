@@ -31,6 +31,7 @@ class Client
 		std::string _realName;
 		int _socket;
 		bool _correctPassword;
+		Channel *_curChannel;
 };
 
 #endif

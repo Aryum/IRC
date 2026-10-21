@@ -36,8 +36,6 @@ bool Channel::check_fullChannel(const Client &c)
 	if (_clientLimit == _clients.size())
 		return (err_CHANNELISFULL(c, _name), false);
 	return true;
-
-
 }
 
 bool Channel::check_canInvite(const Client &c)

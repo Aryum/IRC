@@ -147,34 +147,6 @@ void Channel::changeMode(Client &client, Args args)
 
 		}
 	}
-
-
-	//args are checked here, it passes MODE as well, remember to ignore 0
-	/*
-			i - invite-only channel flag;
-           t - topic settable by channel operator only flag;
-		   k - set a channel key (password).
-           o - give/take channel operator privileges;
-        	   l - set the user limit to channel;
-   Yes. A single MODE command can carry several mode changes in one modestring, and the parameters are consumed left to right by whichever modes need them.
-
-MODE #chan +itk secret          ; +i, +t, and key "secret"
-MODE #chan +kl secret 10        ; key, then limit (params in order)
-MODE #chan +i-t+o alice         ; mixed signs: +i, -t, +o alice
-MODE #chan -k+l 20              ; -k takes no param here, +l takes 20
-
-
-Parsing rules
-
-Start with a “current sign” (+ by default). Each + or - in the modestring switches it, and it applies to all following letters until the next sign.
-Walk the letters one at a time. For each letter, decide whether it needs a parameter, and if so take the next unused argument from the list.
-Which modes need a parameter depends on the sign:
-Mode	+	-
-i, t	none	none
-k	key	none (some servers accept and ignore a key)
-l	limit	none
-o	nick	nick
-*/
 }
 
 

@@ -51,7 +51,7 @@ bool Server::getClient(Client &client, std::string name, Client **out)
 
 	while (it != _clients.end())
 	{
-		if (it->second->getNickName() == name)
+		if (it->second->get(Name_Nick) == name)
 		{
 			*out = it->second;
 			return true;
