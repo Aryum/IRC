@@ -1,21 +1,5 @@
 #include "Channel.hpp"
 
-/*
-	
-	
-	
-	
-	ERR_KEYSET
-	ERR_NEEDMOREPARAMS
-	ERR_NOSUCHNICK
-	
-	ERR_UMODEUNKNOWNFLAG
-	ERR_UNKNOWNMODE
-	ERR_USERONCHANNEL
-	ERR_USERSDONTMATCH
-*/
-
-
 bool Channel::checkMultiple(const Client &c, Check *checks)
 {
 	for (size_t i = 0; checks[i] != NULL; i++)

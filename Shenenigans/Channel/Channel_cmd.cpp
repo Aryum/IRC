@@ -54,7 +54,7 @@ void Channel::inviteClient(Client &op, Client &user)
 	Check checks[] {check_canInvite, check_fullChannel, NULL};
 	if (checkMultiple(op, checks) || check_isOnChannel(user))
 		return ;
-	rpl_INVITING(op, user.getNickName(), _name);
+	rpl_INVITING(op, user.get(Name_Nick), _name);
 }
 
 
@@ -92,7 +92,7 @@ void Channel::toggleOp(Client &client, std::string name, bool on)
 	std::map<const Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		if (it->first->getNickName() == name)
+		if (it->first->get(Name_Nick) == name)
 		{
 			it->second = on ? Status_Op: Status_Connected;
 			return ;

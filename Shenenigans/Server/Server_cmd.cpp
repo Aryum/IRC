@@ -8,7 +8,7 @@ void Server::cmd_PASS(Client &client, Args args)
 		return err_NEEDMOREPARAMS(client, "PASS");
 	if (args[0] != _password)
 		return err_PASSWDMISMATCH(client);
-	client.correctPassword();
+	client.hasPassword();
 
 
 	//send welcome?
