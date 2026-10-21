@@ -14,9 +14,11 @@ class Client
 {
 	public:
 		Client(int socket);
-		bool operator==(const Client &other) const;
+		bool operator==(Client &other) const;
+		bool operator!=(Client &other) const;
 		int getSocket();
-		void setNames(NameType type, std::string value);
+		void changeNick(std::string nick);
+		void setNames(std::string user, std::string host, std::string nick);
 		void sendReply(std::string reply) const;
 		void setPasswordVerified();
 		bool isRegistred();

@@ -1,6 +1,6 @@
 #include "Channel.hpp"
 
-Channel::Channel(const Client &client,const std::string &name) :
+Channel::Channel(Client &client, std::string &name) :
 	_name(name),
 	_topicVal(),
 	_passwordVal(),
@@ -13,7 +13,7 @@ Channel::Channel(const Client &client,const std::string &name) :
 
 ClientChannelStatus Channel::getClientStatus(const Client &client)
 {
-	std::map<const Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
 		if (&client == it->first)
@@ -60,7 +60,6 @@ void Channel::inviteClient(Client &op, Client &user)
 
 void Channel::getTopic(Client &client)
 {
-	//probably wrong
 	if (!check_isOperator(client))
 		return ;
 	if (_topicVal == "")
@@ -74,7 +73,6 @@ void Channel::changeTopic(Client &client, std::string topic)
 	if (!check_isOperator(client))
 		return ;
 	_topicVal = topic;
-	//prob neefds smt else
 }
 
 bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &out)
@@ -88,8 +86,7 @@ bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &o
 
 void Channel::toggleOp(Client &client, std::string name, bool on)
 {
-	
-	std::map<const Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
 		if (it->first->get(Name_Nick) == name)
@@ -102,15 +99,7 @@ void Channel::toggleOp(Client &client, std::string name, bool on)
 	return err_NOTONCHANNEL(client, _name);
 }
 
-/*
-ERR_NEEDMOREPARAMS              RPL_CHANNELMODEIS
-           ERR_CHANOPRIVSNEEDED            ERR_NOSUCHNICK
-           ERR_NOTONCHANNEL                ERR_KEYSET
-           RPL_BANLIST                     RPL_ENDOFBANLIST
-           ERR_UNKNOWNMODE                 
 
-           ERR_USERSDONTMATCH              RPL_UMODEIS
-           ERR_UMODEUNKNOWNFLAG*/
 void Channel::changeMode(Client &client, Args args)
 {
 	if (!check_isOperator(client))
@@ -143,7 +132,6 @@ void Channel::changeMode(Client &client, Args args)
 					_passwordVal = "";
 				break;
 			case 'o':
-				//this allows for op on op shenenignas
 				if (consumeArg(client, args, curParam, var))
 					toggleOp(client, var, adding);
 				break;
@@ -190,3 +178,13 @@ o	nick	nick
 }
 
 
+void Channel::broadcastMessage(Client &client, std::string message)
+{
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	while (it != _clients.end())
+	{
+		if (client != *(it->first))
+			it->first->sendReply(message);
+		it++;
+	}
+}

@@ -17,7 +17,7 @@ typedef bool (Channel::*Check)(const Client &a);
 class Channel
 {
 	public:
-		Channel(const Client &client,const std::string &name);
+		Channel(Client &client, std::string &name);
 
 
 		std::string  getName();
@@ -30,7 +30,7 @@ class Channel
 		void changeMode(Client &client, Args args);
 		void inviteClient(Client &op, Client &user);
 		ClientChannelStatus getClientStatus(const Client &client);
-		void broadcastMessage(std::string message);
+		void broadcastMessage(Client &client, std::string message);
 		bool isInviteOnly();
 	
 	private:
@@ -38,12 +38,11 @@ class Channel
 		std::string _topicVal;
 		std::string _passwordVal;
 		std::string _clientPassword;
-		std::map<const Client*, ClientChannelStatus> _clients;
+		std::map<Client*, ClientChannelStatus> _clients;
 		bool _inviteOnly;
 		int _clientLimit;
 		
 		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
-		void toggleOp(std::string name, bool on);
 		void toggleOp(Client &client, std::string name, bool on);
 		bool check_isOnChannel(const Client &c);
 		bool check_isOperator(const Client &c);
