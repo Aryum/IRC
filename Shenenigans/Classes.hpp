@@ -35,6 +35,9 @@ void rpl_INVITING(const Client &client, std::string invited,std::string channel)
 
 
 
+void err_CANNOTSENDTOCHAN(const Client &client, std::string channel);
+void err_NORECIPIENT(const Client &client);
+void err_NOTEXTTOSEND(const Client &client);
 void err_ERRONEUSNICKNAME(const Client &client, std::string channel);
 void rpl_WELCOME(const Client &client, std::string date);
 #endif

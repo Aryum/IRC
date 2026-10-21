@@ -88,7 +88,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 
 static bool parseChannel(std::string name)
 {
-
+	return (name[0] == '&' || name[0] == '#') && name.size() < 200;
 }
 
 void Server::cmd_JOIN(Client &client, Args args)
@@ -100,10 +100,10 @@ void Server::cmd_JOIN(Client &client, Args args)
 
 	while (channelIdx != std::string::npos)
 	{
-		std::string name = nextChar(args[0], channelIdx, ',', true);
-		std::string password = nextChar(args[0], channelIdx, ',', true);
+		std::string name = nextChar(args[0], channelIdx, ',');
+		std::string password = nextChar(args[0], channelIdx, ',');
 
-		if (name[0] != '&' || name[0] != '#' || name.size() > 200)
+		if (!parseChannel(name))
 			err_NOSUCHCHANNEL(client, name);
 		else
 		{
@@ -129,7 +129,7 @@ void Server::cmd_PART(Client &client, Args args)
 	bool foundChannel = false;
 	while (channelIdx != std::string::npos)
 	{
-		std::string name = nextChar(args[0], channelIdx, ',', true);
+		std::string name = nextChar(args[0], channelIdx, ',');
 		Channel *channel = nullptr;
 		if (getChannel(client, name, &channel))
 			return ;
@@ -148,8 +148,8 @@ void Server::cmd_KICK(Client &client, Args args)
 	bool foundChannel = false;
 	while (channelIdx != std::string::npos)
 	{
-		std::string channelName = nextChar(args[0], channelIdx, ',', true);
-		std::string nickName = nextChar(args[1], userIdx, ',', true);
+		std::string channelName = nextChar(args[0], channelIdx, ',');
+		std::string nickName = nextChar(args[1], userIdx, ',');
 		if (userIdx == std::string::npos && nickName == "")
 			break ;
 		Channel *channel = nullptr;
@@ -196,9 +196,31 @@ void Server::cmd_MODE(Client &client, Args args)
 
 void Server::cmd_PRIVMSG(Client &client, Args args)
 {
-	
-	
+	if (args.size() == 0)
+		return err_NORECIPIENT(client);
+	if (args.size() == 1)
+	{
+		if (args[0][0] == ':')
+			return err_NORECIPIENT(client);
+		else
+			return err_NOTEXTTOSEND(client);
+	}
+	if (args[1].size() == 1)
+		return err_NOTEXTTOSEND(client);
+
 	size_t targetIdx = 0;
+	while (targetIdx != std::string::npos)
+	{
+		Channel *tarChannel = nullptr;
+		Client *tarClient = nullptr;
+
+		std::string receiver = nextChar(args[0], targetIdx, ',');
+		if (parseChannel(receiver) && getChannel(client, receiver, &tarChannel))
+			tarChannel->broadcastMessage(client, args[1]);
+		else if (getClient(client, receiver, &tarClient))
+			client.sendReply(args[1]);
+	}
+
 
 	/*
 

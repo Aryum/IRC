@@ -46,8 +46,6 @@ void Server::call_cmd(Client &client, std::string input)
 				prefix = true;
 				continue;
 			}
-			else
-				token.erase(0);
 		}
 			
 		if (command.empty())
@@ -63,5 +61,7 @@ void Server::call_cmd(Client &client, std::string input)
 	CmdMap::iterator it = _cmd.find(command);
 	if (it == _cmd.end())
 		return err_UNKNOWNCOMMAND(client, command);
+	if (command != "PRIVMSG" && params[params.size() - 1][0] == ':')
+		params[params.size() - 1].erase(0);
 	(this->*(it->second))(client, params);
 }

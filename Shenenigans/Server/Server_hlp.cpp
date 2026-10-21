@@ -22,6 +22,10 @@ std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 	return ret;
 }
 
+std::string nextChar(const std::string &input, size_t &idx, char c)
+{
+	return nextChar(input, idx, true);
+}
 //already sends message if doesnt find
 Channel *Server::getChannel(std::string name)
 {
@@ -61,3 +65,4 @@ bool Server::getClient(Client &client, std::string name, Client **out)
 	err_NOSUCHNICK(client, name);
 	return false;
 }
+

@@ -74,6 +74,7 @@ class Server
 
 //move to its own helper file, it contains all the system headers as well
 std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix);
+std::string nextChar(const std::string &input, size_t &idx, char c);
 
 
 #endif

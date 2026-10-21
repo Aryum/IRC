@@ -79,3 +79,20 @@ void err_BADCHANNELKEY(const Client &client, std::string channel)
 {
 	client.sendReply("475 " + client.get(Name_Nick) + " " + channel + " :Cannot join channel (+k)");
 }
+
+void err_CANNOTSENDTOCHAN(const Client &client, std::string channel)
+{
+	client.sendReply("404 " + channel + " :Cannot send to channel");
+
+}
+
+void err_NORECIPIENT(const Client &client)
+{
+	client.sendReply("411 :No recipient given (PRIVMSG)");
+}
+
+
+void err_NOTEXTTOSEND(const Client &client)
+{
+	client.sendReply("412 :No text to send");
+}

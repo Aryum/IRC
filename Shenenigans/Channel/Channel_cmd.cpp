@@ -152,6 +152,8 @@ void Channel::changeMode(Client &client, Args args)
 
 void Channel::broadcastMessage(Client &client, std::string message)
 {
+	if (getClientStatus(client) == Status_None)
+		return err_CANNOTSENDTOCHAN(client, _name);
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
