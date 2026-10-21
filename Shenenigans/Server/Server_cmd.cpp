@@ -1,4 +1,5 @@
 #include "Server.hpp"
+
 void Server::cmd_PASS(Client &client, Args args)
 {
 	if (client.isRegistred())
@@ -46,8 +47,11 @@ void Server::cmd_NICK(Client &client, Args args)
 		it++;
 	}
 	client.changeNick(args[0]);
-	if (client.isRegistred())
+	if (client.isRegistred() && newConnection)
+	{
+		_clients.insert(std::make_pair(client.getSocket(), &client));
 		rpl_WELCOME(client, _date);
+	}
 }
 void Server::cmd_USER(Client &client, Args args)
 {
@@ -62,7 +66,6 @@ void Server::cmd_USER(Client &client, Args args)
 	}
 	client.setNames(args[0], args[1], args[3]);
 
-	_clients.insert(std::make_pair(client.getSocket(), &client));
 }
 
 
@@ -121,10 +124,7 @@ void Server::cmd_JOIN(Client &client, Args args)
 void Server::cmd_PART(Client &client, Args args)
 {
 	if (args.size() < 1)
-	{
-		err_NEEDMOREPARAMS(client, "PART");
-		return ;
-	}
+		return err_NEEDMOREPARAMS(client, "PART");
 	size_t channelIdx = 0;
 	bool foundChannel = false;
 	while (channelIdx != std::string::npos)
