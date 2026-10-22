@@ -180,6 +180,7 @@ void Server::receiveData(int index)
 
             for (std::string::size_type i = 0; i < data.size(); ++i)
             {
+				
                 if (data[i] == '\r')
                     std::cout << "\\r";
                 else if (data[i] == '\n')

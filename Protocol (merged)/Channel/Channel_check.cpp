@@ -16,8 +16,10 @@ bool Channel::check_isOnChannel(Client &c)
 		return (_server.err_NOTONCHANNEL(c, _name), false);
 	return true;
 }
-
-
+std::string  Channel::getName()
+{
+	return _name;
+}
 bool Channel::check_isOperator(Client &c)
 {
 	ClientChannelStatus status = getClientStatus(c);

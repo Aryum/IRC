@@ -1,8 +1,8 @@
 #ifndef CHANNEL_HPP
 # define CHANNEL_HPP
-#include <string>
-#include <vector>
+
 #include "../Classes.hpp"
+#include "../Libs.hpp"
 
 enum ClientChannelStatus
 {
@@ -12,8 +12,7 @@ enum ClientChannelStatus
 };
 class Channel;
 
-typedef bool (Channel::*Check)(Client &a);
-
+typedef bool (Channel::*Check)(Client &);
 class Channel
 {
 	public:
@@ -34,14 +33,14 @@ class Channel
 		bool isInviteOnly();
 	
 	private:
+		Server& _server;
 		std::string _name;
 		std::string _topicVal;
 		std::string _passwordVal;
 		std::string _clientPassword;
 		std::map<Client*, ClientChannelStatus> _clients;
-		Server& _server;
 		bool _inviteOnly;
-		int _clientLimit;
+		long unsigned int _clientLimit;
 		
 		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
 		void toggleOp(Client &client, std::string name, bool on);

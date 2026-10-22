@@ -104,7 +104,7 @@ void Server::cmd_JOIN(Client &client, Args args)
 	while (channelIdx != std::string::npos)
 	{
 		std::string name = nextChar(args[0], channelIdx, ',');
-		std::string password = nextChar(args[0], channelIdx, ',');
+		std::string password = nextChar(args[0], keyIdx, ',');
 
 		if (!parseChannel(name))
 			err_NOSUCHCHANNEL(client, name);
@@ -125,7 +125,6 @@ void Server::cmd_PART(Client &client, Args args)
 	if (args.size() < 1)
 		return err_NEEDMOREPARAMS(client, "PART");
 	size_t channelIdx = 0;
-	bool foundChannel = false;
 	while (channelIdx != std::string::npos)
 	{
 		std::string name = nextChar(args[0], channelIdx, ',');
@@ -144,7 +143,6 @@ void Server::cmd_KICK(Client &client, Args args)
 
 	size_t channelIdx = 0;
 	size_t userIdx = 0;
-	bool foundChannel = false;
 	while (channelIdx != std::string::npos)
 	{
 		std::string channelName = nextChar(args[0], channelIdx, ',');
@@ -153,7 +151,7 @@ void Server::cmd_KICK(Client &client, Args args)
 			break ;
 		Channel *channel = nullptr;
 		Client *user = nullptr;
-		if (!getChannel(client, channelName, &channel) || !getClient(client, nickName, &user));
+		if (!getChannel(client, channelName, &channel) || !getClient(client, nickName, &user))
 			continue ; 
 		channel->kickClient(client, *user, args.size() >= 3 ? args[2] : "");
 	}

@@ -24,7 +24,7 @@ std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 
 std::string nextChar(const std::string &input, size_t &idx, char c)
 {
-	return nextChar(input, idx, true);
+	return nextChar(input, idx, c, true);
 }
 //already sends message if doesnt find
 Channel *Server::getChannel(std::string name)

@@ -47,10 +47,6 @@ void Server::err_NOSUCHNICK(Client &client, std::string nick)
 	sendToClient(client.getSocket() , "432 " + nick + " :Erroneus nickname");
 }
 
-void Server::err_NOTONCHANNEL(Client &client, std::string channel)
-{
-	sendToClient(client.getSocket() , "442 " + client.get(Name_Nick) + " " + channel + " :You're not on that channel");
-}
 
 void Server::err_UNKNOWNMODE(Client &client, char c)
 {

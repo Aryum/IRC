@@ -8,7 +8,8 @@ Client::Client(int socket) :
 		_correctPassword(false),
 		_curChannel(nullptr)
 {}
-
+Client::~Client()
+{}
 bool Client::operator==(Client &other) const
 {
 	return _socket == other._socket;
@@ -34,6 +35,7 @@ void Client::setNames(std::string user, std::string host, std::string nick)
 	_hostName = host;
 	_nickName = nick;
 	_userName = user;
+	_fullName = ":"+ nick + "!" + user + "@" + host;
 }
 
 
@@ -56,6 +58,8 @@ std::string Client::get(NameType type) const
 			return _nickName;
 		case Name_User:
 			return _userName;
+		case Name_Full:
+			return _fullName;
 		default:
 			return "";
 	}

@@ -2,12 +2,14 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 #include "../Classes.hpp"
+#include "../Libs.hpp"
 
 enum NameType
 {
 	Name_User,
 	Name_Nick, 
-	Name_Host
+	Name_Host,
+	Name_Full
 };
 
 class Client 
@@ -42,7 +44,7 @@ class Client
 		std::string _userName;
 		std::string _nickName;
 		std::string _hostName;
-		std::string _realName;
+		std::string _fullName;
 		int _socket;
 		bool _correctPassword;
 		Channel *_curChannel;

@@ -1,45 +1,14 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
+
 #include "../Classes.hpp"
-
-#include <poll.h>
-#include <sys/socket.h>
-#include <sys/socket.h>
-#include <vector>
-#include <string>
-#include <map>
-#include <iostream>
-#include <cstring>
-#include <iostream>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <cmath>
-#include <string>
-#include <exception>
-#include <fstream>
-#include <cstdlib>
-#include <iomanip>
-#include <algorithm>
-#include <sstream>
-#include <unistd.h>
-#include <poll.h>
-#include <vector>
-#include <cerrno>
-
-#include <arpa/inet.h>
-#include <stdexcept>
-
-class Server;
-typedef const std::vector<std::string>& Args;
-typedef std::vector<std::string> EmptyArgs;
-typedef std::map<std::string, void (Server::*)(Client &, Args)> CmdMap;
-typedef std::map<int, Client*> ClientMap;
+#include "../Libs.hpp"
 
 class Server
 {
 	public:
         Server(int port, const std::string& password);
+		~Server();
 		void call_cmd(Client &client, std::string input);
 
 		void start();
@@ -62,7 +31,6 @@ class Server
 		void err_NONICKNAMEGIVEN(Client &client);
 		void err_NOSUCHCHANNEL(Client &client, std::string channel);
 		void err_NOSUCHNICK(Client &client, std::string nick);
-		void err_NOTONCHANNEL(Client &client, std::string channel);
 		void err_UNKNOWNMODE(Client &client, char c);
 		void err_CHANOPRIVSNEEDED(Client &client, std::string channel);
 		void err_CHANNELISFULL(Client &client, std::string channel);

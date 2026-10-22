@@ -1,8 +1,8 @@
 #include "Channel.hpp"
 
 Channel::Channel(Server& server, Client &client, std::string &name) :
-	_name(name),
 	_server(server),
+	_name(name),
 	_topicVal(),
 	_passwordVal(),
 	_clients(),
@@ -31,7 +31,10 @@ ClientChannelStatus Channel::getClientStatus( Client &client)
 void Channel::joinClient(Client &client, std::string password)
 {
 	_clientPassword = password;
-	Check checks[] {check_isOnChannel, check_canInvite, check_fullChannel, check_key, NULL};
+	Check checks[] = {	&Channel::check_isOnChannel, 
+						&Channel::check_canInvite, 
+						&Channel::check_fullChannel, 
+						&Channel::check_key, NULL};
 	if (checkMultiple(client, checks))
 		return ;
 	_server.rpl_TOPIC(client, _name, _topicVal);
@@ -50,11 +53,13 @@ void Channel::kickClient(Client &op, Client &user, std::string reason)
 	if (!check_isOperator(op) || !check_isOnChannel(user))
 		return;
 	_clients.erase(&user);
+	broadcastMessage(op, ":" + op.get(Name_Full) +  "KICK" + _name + user.get(Name_Nick) + ":" + reason);
 }
 
 void Channel::inviteClient(Client &op, Client &user)
 {
-	Check checks[] {check_canInvite, check_fullChannel, NULL};
+	Check checks[] = {	&Channel::check_canInvite, 
+						&Channel::check_fullChannel, NULL};
 	if (checkMultiple(op, checks) || check_isOnChannel(user))
 		return ;
 	_server.rpl_INVITING(op, user.get(Name_Nick), _name);
