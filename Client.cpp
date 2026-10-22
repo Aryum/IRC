@@ -1,0 +1,106 @@
+#include <cstring>
+#include <iostream>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+/*using namespace std;
+
+int main()
+{
+    // creating socket
+    int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+
+    // specifying address
+    sockaddr_in serverAddress;
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(8080);
+    serverAddress.sin_addr.s_addr = INADDR_ANY;
+
+    // sending connection request
+
+	string input;
+	while (1)
+	{
+
+		getline(cin, input);
+    	connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+		send(clientSocket, input.c_str(), strlen(input.c_str()), 0);
+		if (input == "close")
+			break;
+	    close(clientSocket);
+	}
+    return 0;
+}
+
+*/
+
+#include "Client.hpp"
+
+
+Client::Client(int fd, const std::string& hostname, int port) : fd(fd), hostname(hostname), port(port) 
+{
+}
+
+Client::~Client() 
+{
+}
+
+int Client::getFd() const 
+{
+    return fd;
+}
+
+const std::string& Client::getHostname() const 
+{
+    return hostname;
+}
+
+int Client::getPort() const 
+{
+    return port;
+}
+
+void Client::appendInput(const std::string& data) //append data to buffer
+{
+    inputBuffer += data; 
+}
+
+bool Client::hasCompleteLine() const 
+{
+    return inputBuffer.find("\r\n") != std::string::npos; 
+}
+
+void Client::appendOutput(const std::string& data)
+{
+    outputBuffer += data;
+}
+
+bool Client::hasPendingOutput() const
+{
+    return !outputBuffer.empty();
+}
+
+const std::string& Client::getOutputBuffer() const
+{
+    return outputBuffer;
+}
+
+void Client::removeSentOutput(std::string::size_type bytes)
+{
+    outputBuffer.erase(0, bytes);
+}
+
+std::string Client::extractLine() 
+{
+    std::string::size_type pos = inputBuffer.find("\r\n"); 
+
+    if (pos == std::string::npos) 
+        return ""; // empty string if no change
+
+    std::string line = inputBuffer.substr(0, pos); 
+
+    inputBuffer.erase(0, pos + 2); //erase from buffer
+
+    return line; // 
+}
