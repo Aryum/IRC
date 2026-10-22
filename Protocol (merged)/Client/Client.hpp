@@ -10,21 +10,35 @@ enum NameType
 	Name_Host
 };
 
-class Client
+class Client 
 {
-	public:
+    public:
 		Client(int socket);
+        ~Client();
+
 		bool operator==(Client &other) const;
 		bool operator!=(Client &other) const;
+
 		int getSocket();
 		void changeNick(std::string nick);
 		void setNames(std::string user, std::string host, std::string nick);
-		void sendReply(std::string reply) const;
 		void setPasswordVerified();
 		bool isRegistred();
 		std::string get(NameType type) const;
-		
-	private:
+
+
+        void appendInput(const std::string& data);
+        bool hasCompleteLine() const;
+        std::string extractLine();
+
+        
+        void appendOutput(const std::string& data);
+        bool hasPendingOutput() const;
+        const std::string& getOutputBuffer() const;
+        void removeSentOutput(std::string::size_type bytes);
+
+
+    private:
 		std::string _userName;
 		std::string _nickName;
 		std::string _hostName;
@@ -32,6 +46,10 @@ class Client
 		int _socket;
 		bool _correctPassword;
 		Channel *_curChannel;
+        std::string inputBuffer;
+        std::string outputBuffer;
+
 };
+
 
 #endif

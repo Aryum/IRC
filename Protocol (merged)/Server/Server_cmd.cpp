@@ -113,7 +113,7 @@ void Server::cmd_JOIN(Client &client, Args args)
 			Channel *channel = getChannel(name);
 			std::string reply;
 			if (channel == nullptr)
-				_channels.push_back(Channel(client, name));
+				_channels.push_back(Channel(*this, client, name));
 			else
 				channel->joinClient(client, password);
 		}
@@ -217,6 +217,6 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 		if (parseChannel(receiver) && getChannel(client, receiver, &tarChannel))
 			tarChannel->broadcastMessage(client, args[1]);
 		else if (getClient(client, receiver, &tarClient))
-			client.sendReply(args[1]);
+			sendToClient(client.getSocket(), args[1]);
 	}
 }

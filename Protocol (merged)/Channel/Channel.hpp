@@ -12,12 +12,12 @@ enum ClientChannelStatus
 };
 class Channel;
 
-typedef bool (Channel::*Check)(const Client &a);
+typedef bool (Channel::*Check)(Client &a);
 
 class Channel
 {
 	public:
-		Channel(Client &client, std::string &name);
+		Channel(Server& server, Client &client, std::string &name);
 
 
 		std::string  getName();
@@ -29,7 +29,7 @@ class Channel
 		void getTopic(Client &client);
 		void changeMode(Client &client, Args args);
 		void inviteClient(Client &op, Client &user);
-		ClientChannelStatus getClientStatus(const Client &client);
+		ClientChannelStatus getClientStatus(Client &client);
 		void broadcastMessage(Client &client, std::string message);
 		bool isInviteOnly();
 	
@@ -39,16 +39,17 @@ class Channel
 		std::string _passwordVal;
 		std::string _clientPassword;
 		std::map<Client*, ClientChannelStatus> _clients;
+		Server& _server;
 		bool _inviteOnly;
 		int _clientLimit;
 		
 		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
 		void toggleOp(Client &client, std::string name, bool on);
-		bool check_isOnChannel(const Client &c);
-		bool check_isOperator(const Client &c);
-		bool check_fullChannel(const Client &c);
-		bool check_canInvite(const Client &c);
-		bool check_key(const Client &c);
-		bool checkMultiple(const Client &c, Check *checks);
+		bool check_isOnChannel(Client &c);
+		bool check_isOperator(Client &c);
+		bool check_fullChannel(Client &c);
+		bool check_canInvite(Client &c);
+		bool check_key(Client &c);
+		bool checkMultiple(Client &c, Check *checks);
 };
 #endif

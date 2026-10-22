@@ -1,7 +1,8 @@
 #include "Channel.hpp"
 
-Channel::Channel(Client &client, std::string &name) :
+Channel::Channel(Server& server, Client &client, std::string &name) :
 	_name(name),
+	_server(server),
 	_topicVal(),
 	_passwordVal(),
 	_clients(),
@@ -9,9 +10,10 @@ Channel::Channel(Client &client, std::string &name) :
 	_clientLimit(-1)
 {
 	_clients.insert(std::make_pair(&client, Status_Op));
+	_server.rpl_TOPIC(client, _name, _topicVal);
 }
 
-ClientChannelStatus Channel::getClientStatus(const Client &client)
+ClientChannelStatus Channel::getClientStatus( Client &client)
 {
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
@@ -32,6 +34,7 @@ void Channel::joinClient(Client &client, std::string password)
 	Check checks[] {check_isOnChannel, check_canInvite, check_fullChannel, check_key, NULL};
 	if (checkMultiple(client, checks))
 		return ;
+	_server.rpl_TOPIC(client, _name, _topicVal);
 	_clients.insert(std::make_pair(&client, Status_Connected));
 }
 
@@ -54,7 +57,7 @@ void Channel::inviteClient(Client &op, Client &user)
 	Check checks[] {check_canInvite, check_fullChannel, NULL};
 	if (checkMultiple(op, checks) || check_isOnChannel(user))
 		return ;
-	rpl_INVITING(op, user.get(Name_Nick), _name);
+	_server.rpl_INVITING(op, user.get(Name_Nick), _name);
 }
 
 
@@ -63,9 +66,9 @@ void Channel::getTopic(Client &client)
 	if (!check_isOperator(client))
 		return ;
 	if (_topicVal == "")
-		rpl_NOTOPIC(client, _name);
+		_server.rpl_NOTOPIC(client, _name);
 	else
-		rpl_TOPIC(client, _name, _topicVal);
+		_server.rpl_TOPIC(client, _name, _topicVal);
 }
 
 void Channel::changeTopic(Client &client, std::string topic)
@@ -78,7 +81,7 @@ void Channel::changeTopic(Client &client, std::string topic)
 bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &out)
 {
 	if (cur == args.size())
-		return (err_NEEDMOREPARAMS(client, "MODE"), false); 
+		return (_server.err_NEEDMOREPARAMS(client, "MODE"), false); 
 	out = args[cur];
 	cur++;
 	return true;
@@ -96,7 +99,7 @@ void Channel::toggleOp(Client &client, std::string name, bool on)
 		}
 		it++;
 	}
-	return err_NOTONCHANNEL(client, _name);
+	return _server.err_NOTONCHANNEL(client, _name);
 }
 
 
@@ -142,7 +145,7 @@ void Channel::changeMode(Client &client, Args args)
 					_clientLimit = -1;
 				break;
 			default:
-				err_UNKNOWNMODE(client, args[1][i]);
+				_server.err_UNKNOWNMODE(client, args[1][i]);
 				break;
 
 		}
@@ -153,12 +156,12 @@ void Channel::changeMode(Client &client, Args args)
 void Channel::broadcastMessage(Client &client, std::string message)
 {
 	if (getClientStatus(client) == Status_None)
-		return err_CANNOTSENDTOCHAN(client, _name);
+		return _server.err_CANNOTSENDTOCHAN(client, _name);
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
 		if (client != *(it->first))
-			it->first->sendReply(message);
+			_server.sendToClient(it->first->getSocket(), message);
 		it++;
 	}
 }

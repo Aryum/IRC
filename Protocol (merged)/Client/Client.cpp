@@ -36,10 +36,6 @@ void Client::setNames(std::string user, std::string host, std::string nick)
 	_userName = user;
 }
 
-void Client::sendReply(std::string reply) const
-{
-
-}
 
 void Client::setPasswordVerified()
 {
@@ -63,4 +59,48 @@ std::string Client::get(NameType type) const
 		default:
 			return "";
 	}
+}
+
+void Client::appendInput(const std::string& data) //append data to buffer
+{
+    inputBuffer += data; 
+}
+
+bool Client::hasCompleteLine() const 
+{
+    return inputBuffer.find("\r\n") != std::string::npos; 
+}
+
+void Client::appendOutput(const std::string& data)
+{
+    outputBuffer += data;
+}
+
+bool Client::hasPendingOutput() const
+{
+    return !outputBuffer.empty();
+}
+
+const std::string& Client::getOutputBuffer() const
+{
+    return outputBuffer;
+}
+
+void Client::removeSentOutput(std::string::size_type bytes)
+{
+    outputBuffer.erase(0, bytes);
+}
+
+std::string Client::extractLine() 
+{
+    std::string::size_type pos = inputBuffer.find("\r\n"); 
+
+    if (pos == std::string::npos) 
+        return ""; // empty string if no change
+
+    std::string line = inputBuffer.substr(0, pos); 
+
+    inputBuffer.erase(0, pos + 2); //erase from buffer
+
+    return line; // 
 }

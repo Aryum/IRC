@@ -1,6 +1,9 @@
 #include "Server.hpp"
 
-Server::Server()
+Server::Server(int port, const std::string& password) :
+	_port(port), 
+	_serverFd(-1), 
+	_password(password)
 {
 	_cmd["PASS"] = &Server::cmd_PASS;
 	_cmd["NICK"] = &Server::cmd_NICK;
@@ -14,6 +17,11 @@ Server::Server()
 	_cmd["PRIVMSG"] = &Server::cmd_PRIVMSG;
 	time_t t = time(NULL);
 	_date = ctime(&t);
+}
+Server::~Server()
+{
+    if (_serverFd != -1)
+        close(_serverFd);
 }
 
 std::string Server::getDate() const

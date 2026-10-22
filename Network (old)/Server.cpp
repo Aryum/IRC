@@ -10,58 +10,48 @@ Server::~Server()
 
 }
 */
-Server::Server(const Server &other)
-{
-    *this = other;
-}
 
-Server &Server::operator=(const Server &other)
-{
-    if(this != &other)
-        *this = other;
-    return(*this);
-}
 
-Server::Server(int port, const std::string& password): port(port), serverFd(-1), password(password)
+Server::Server(int port, const std::string& password): _port(port), _serverFd(-1), _password(password)
 {
 
 }
 
 Server::~Server()
 {
-    if (serverFd != -1)
-        close(serverFd);
+    if (_serverFd != -1)
+        close(_serverFd);
 }
 
 void Server::setupSocket() //socket 
 {
-    serverFd = socket(AF_INET, SOCK_STREAM, 0); //creates IPV4 socket
+    _serverFd = socket(AF_INET, SOCK_STREAM, 0); //creates IPV4 socket
 
-    if (serverFd == -1)
+    if (_serverFd == -1)
         throw std::runtime_error("socket failed");
 
     int opt = 1;
 
-    if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) //SO_REUSEADDR deixa usar o mesmo adress num retsart
+    if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) //SO_REUSEADDR deixa usar o mesmo adress num retsart
         throw std::runtime_error("setsockopt failed");
 
     sockaddr_in address = {};
     address.sin_family = AF_INET; //IPv4
-    address.sin_port = htons(port); //converts port to network byte order
+    address.sin_port = htons(_port); //converts port to network byte order
     address.sin_addr.s_addr = htonl(INADDR_ANY);//accepts connection on any local network
 
-    if (bind(serverFd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1) //IP adress and port assigned to the socket
+    if (bind(_serverFd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1) //IP adress and port assigned to the socket
         throw std::runtime_error("bind failed");
 
-    if (listen(serverFd, SOMAXCONN) == -1) //socket listening for connections
+    if (listen(_serverFd, SOMAXCONN) == -1) //socket listening for connections
         throw std::runtime_error("listen failed");
 
-    int flags = fcntl(serverFd, F_GETFL, 0);
+    int flags = fcntl(_serverFd, F_GETFL, 0);
 
-    if (flags == -1 || fcntl(serverFd, F_SETFL, flags | O_NONBLOCK) == -1)
+    if (flags == -1 || fcntl(_serverFd, F_SETFL, flags | O_NONBLOCK) == -1)
         throw std::runtime_error("fcntl failed");
 
-    std::cout << "Server listening on port " << port << std::endl;
+    std::cout << "Server listening on port " << _port << std::endl;
 }
 
 void Server::start()
@@ -69,11 +59,11 @@ void Server::start()
     setupSocket();
 
     pollfd serverPoll;
-    serverPoll.fd = serverFd;
+    serverPoll.fd = _serverFd;
     serverPoll.events = POLLIN;
     serverPoll.revents = 0;
 
-    pollFds.push_back(serverPoll);
+    _pollFds.push_back(serverPoll);
 
     run();
 }
@@ -86,7 +76,7 @@ void Server::acceptClients()
         sockaddr_in clientAddress;
         socklen_t clientLength = sizeof(clientAddress);
 
-        int clientFd = accept(serverFd,reinterpret_cast<sockaddr*>(&clientAddress), &clientLength);
+        int clientFd = accept(_serverFd,reinterpret_cast<sockaddr*>(&clientAddress), &clientLength);
 
         if (clientFd == -1)
         {
@@ -118,15 +108,15 @@ void Server::acceptClients()
 
         int clientPort = ntohs(clientAddress.sin_port);
 
-        Client* client = new Client(clientFd, ip, clientPort);
-        clients[clientFd] = client;
+        Client* client = new Client(clientFd);
+        _clients[clientFd] = client;
 
         pollfd clientPoll;
         clientPoll.fd = clientFd;
         clientPoll.events = POLLIN;
         clientPoll.revents = 0;
 
-        pollFds.push_back(clientPoll);
+        _pollFds.push_back(clientPoll);
 
         sendToClient(clientFd, ":myserver NOTICE * :Welcome!\r\n");
 
@@ -138,7 +128,7 @@ void Server::run()
 {
     while (true)
     {
-        int result = poll(&pollFds[0], pollFds.size(), -1);
+        int result = poll(&_pollFds[0], _pollFds.size(), -1);
 
         if (result == -1)
         {
@@ -148,12 +138,12 @@ void Server::run()
             throw std::runtime_error("poll failed");
         }
         
-        int i = static_cast<int>(pollFds.size()) - 1;
+        int i = static_cast<int>(_pollFds.size()) - 1;
 
         while (i >= 1)
         {
-            int clientFd = pollFds[i].fd;
-            short events = pollFds[i].revents;
+            int clientFd = _pollFds[i].fd;
+            short events = _pollFds[i].revents;
 
             if (events & (POLLERR | POLLHUP | POLLNVAL))
             {
@@ -167,7 +157,7 @@ void Server::run()
                 receiveData(i);
 
         // receiveData may have removed this client.
-                if (static_cast<std::vector<pollfd>::size_type>(i) >= pollFds.size() || pollFds[i].fd != clientFd)
+                if (static_cast<std::vector<pollfd>::size_type>(i) >= _pollFds.size() || _pollFds[i].fd != clientFd)
                 {
                     --i;
                     continue;
@@ -178,7 +168,7 @@ void Server::run()
 
             --i;
         }   
-        if (pollFds[0].revents & POLLIN)
+        if (_pollFds[0].revents & POLLIN)
             acceptClients();
     }
 
@@ -188,18 +178,18 @@ void Server::run()
 void Server::receiveData(int index)
 {
     char buffer[512];
-    int clientFd = pollFds[index].fd;
+    int clientFd = _pollFds[index].fd;
 
     while(true)
     {
-        ssize_t bytesReceived = recv(pollFds[index].fd, buffer, sizeof(buffer), 0);
+        ssize_t bytesReceived = recv(_pollFds[index].fd, buffer, sizeof(buffer), 0);
         std::cout << "recv returned: " << bytesReceived << std::endl;
 
         if(bytesReceived > 0)
         {
-            std::map<int, Client*>::iterator it = clients.find(clientFd);
+            std::map<int, Client*>::iterator it = _clients.find(clientFd);
 
-            if (it == clients.end())
+            if (it == _clients.end())
             {
                 removeData(index);
                 return;
@@ -252,18 +242,18 @@ void Server::receiveData(int index)
 
 void Server::removeData(int index)
 {
-    int clientFd = pollFds[index].fd;
+    int clientFd = _pollFds[index].fd;
 
-    std::map<int, Client*>::iterator it = clients.find(clientFd);
+    std::map<int, Client*>::iterator it = _clients.find(clientFd);
 
-    if (it != clients.end())
+    if (it != _clients.end())
     {
         delete it->second;
-        clients.erase(it);
+        _clients.erase(it);
     }
     close(clientFd);
 
-    pollFds.erase(pollFds.begin() + index);
+    _pollFds.erase(_pollFds.begin() + index);
 
     std::cout << "Disconnected fd=" << clientFd << std::endl;
 
@@ -271,18 +261,18 @@ void Server::removeData(int index)
 
 void Server::sendToClient(int clientFd, const std::string& message)
 {
-    std::map<int, Client*>::iterator it = clients.find(clientFd);
+    std::map<int, Client*>::iterator it = _clients.find(clientFd);
 
-    if (it == clients.end())
+    if (it == _clients.end())
         return;
 
     it->second->appendOutput(message);
 
-    for (std::vector<pollfd>::size_type i = 0; i < pollFds.size(); ++i)
+    for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)
     {
-        if (pollFds[i].fd == clientFd)
+        if (_pollFds[i].fd == clientFd)
         {
-            pollFds[i].events |= POLLOUT;
+            _pollFds[i].events |= POLLOUT;
             break;
         }
     }
@@ -290,11 +280,11 @@ void Server::sendToClient(int clientFd, const std::string& message)
 
 void Server::sendData(int index)
 {
-    int clientFd = pollFds[index].fd;
+    int clientFd = _pollFds[index].fd;
 
-    std::map<int, Client*>::iterator it = clients.find(clientFd);
+    std::map<int, Client*>::iterator it = _clients.find(clientFd);
 
-    if (it == clients.end())
+    if (it == _clients.end())
     {
         removeData(index);
         return;
@@ -325,5 +315,5 @@ void Server::sendData(int index)
         return;
     }
 
-    pollFds[index].events &= ~POLLOUT;
+    _pollFds[index].events &= ~POLLOUT;
 }

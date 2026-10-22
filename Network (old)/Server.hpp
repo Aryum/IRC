@@ -30,10 +30,7 @@
 class Server
 {
     public:
-        Server();
         Server(int port, const std::string& password);
-        Server(const Server &other);
-        Server& operator=(const Server &other);
         ~Server();
 
         void start();
@@ -49,11 +46,11 @@ class Server
         void sendData(int index);
 
     private:
-        int port;
-        int serverFd;
-        std::string password;
-        std::vector<pollfd> pollFds;
-        std::map<int, Client*> clients;
+        int _port;
+        int _serverFd;
+        std::string _password;
+        std::vector<pollfd> _pollFds;
+        std::map<int, Client*> _clients;
 
        
 

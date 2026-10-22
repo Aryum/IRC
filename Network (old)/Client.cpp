@@ -38,14 +38,19 @@ int main()
 #include "Client.hpp"
 
 
-Client::Client(int fd, const std::string& hostname, int port) : fd(fd), hostname(hostname), port(port) 
-{
-}
+Client::Client(int socket) :
+		_userName(),
+		_nickName(),
+		_hostName(),
+		_socket(socket),
+		_correctPassword(false),
+		_curChannel(nullptr)
+{}
 
 Client::~Client() 
 {
 }
-
+/*
 int Client::getFd() const 
 {
     return fd;
@@ -60,47 +65,57 @@ int Client::getPort() const
 {
     return port;
 }
+*/
 
-void Client::appendInput(const std::string& data) //append data to buffer
+
+bool Client::operator==(Client &other) const
 {
-    inputBuffer += data; 
+	return _socket == other._socket;
 }
 
-bool Client::hasCompleteLine() const 
+bool Client::operator!=(Client &other) const
 {
-    return inputBuffer.find("\r\n") != std::string::npos; 
+	return !((*this) == other);
 }
 
-void Client::appendOutput(const std::string& data)
+int Client::getSocket()
 {
-    outputBuffer += data;
+	return _socket;
 }
 
-bool Client::hasPendingOutput() const
+void Client::changeNick(std::string nick)
 {
-    return !outputBuffer.empty();
+	_nickName = nick;
 }
 
-const std::string& Client::getOutputBuffer() const
+void Client::setNames(std::string user, std::string host, std::string nick)
 {
-    return outputBuffer;
+	_hostName = host;
+	_nickName = nick;
+	_userName = user;
 }
 
-void Client::removeSentOutput(std::string::size_type bytes)
+
+void Client::setPasswordVerified()
 {
-    outputBuffer.erase(0, bytes);
+	_correctPassword = true;
 }
 
-std::string Client::extractLine() 
+bool Client::isRegistred()
 {
-    std::string::size_type pos = inputBuffer.find("\r\n"); 
-
-    if (pos == std::string::npos) 
-        return ""; // empty string if no change
-
-    std::string line = inputBuffer.substr(0, pos); 
-
-    inputBuffer.erase(0, pos + 2); //erase from buffer
-
-    return line; // 
+	return (_hostName != "" && _userName != "" && _nickName != "" && _correctPassword);
+}
+std::string Client::get(NameType type) const
+{
+	switch (type)
+	{
+		case Name_Host:
+			return _hostName;
+		case Name_Nick:
+			return _nickName;
+		case Name_User:
+			return _userName;
+		default:
+			return "";
+	}
 }

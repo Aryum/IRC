@@ -25,10 +25,17 @@
 class Client 
 {
     public:
-        Client();
-        Client(int fd, const std::string& hostname, int port);
-        Client(const Client &other);
-        Client& operator=(const Client &other);
+		Client(int socket);
+		bool operator==(Client &other) const;
+		bool operator!=(Client &other) const;
+
+		int getSocket();
+		void changeNick(std::string nick);
+		void setNames(std::string user, std::string host, std::string nick);
+		void sendReply(std::string reply) const;
+		void setPasswordVerified();
+		bool isRegistred();
+		std::string get(NameType type) const;
         ~Client();
 
         int getFd() const;
@@ -47,11 +54,17 @@ class Client
 
 
     private:
-        int fd;
-        std::string hostname;
-        int port;
+		std::string _userName;
+		std::string _nickName;
+		std::string _hostName;
+		std::string _realName;
+		int _socket;
+		bool _correctPassword;
+		Channel *_curChannel;
         std::string inputBuffer;
         std::string outputBuffer;
+
+		
 
 };
 
