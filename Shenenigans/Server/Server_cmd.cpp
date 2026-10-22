@@ -117,7 +117,6 @@ void Server::cmd_JOIN(Client &client, Args args)
 			else
 				channel->joinClient(client, password);
 		}
-		
 	}
 }
 
@@ -220,34 +219,4 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 		else if (getClient(client, receiver, &tarClient))
 			client.sendReply(args[1]);
 	}
-
-
-	/*
-
-      Command: PRIVMSG
-   Parameters: <receiver>{,<receiver>} <text to be sent>
-
-   PRIVMSG is used to send private messages between users.  <receiver>
-   is the nickname of the receiver of the message.  <receiver> can also
-   be a list of names or channels separated with commas.
-
-   The <receiver> parameter may also me a host mask  (#mask)  or  server
-   mask  ($mask).   In  both cases the server will only send the PRIVMSG
-   to those who have a server or host matching the mask.  The mask  must
-   have at  least  1  (one)  "."  in it and no wildcards following the
-   last ".".  This requirement exists to prevent people sending messages
-   to  "#*"  or "$*",  which  would  broadcast  to  all  users; from
-   experience, this is abused more than used responsibly and properly.
-   Wildcards are  the  '*' and  '?'   characters.   This  extension  to
-   the PRIVMSG command is only available to Operators.
-
-   Numeric Replies:
-
-           ERR_NORECIPIENT                 ERR_NOTEXTTOSEND
-           ERR_CANNOTSENDTOCHAN            ERR_NOTOPLEVEL
-           ERR_WILDTOPLEVEL                ERR_TOOMANYTARGETS
-           ERR_NOSUCHNICK
-           RPL_AWAY
-	
-	*/
 }
