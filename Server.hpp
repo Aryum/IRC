@@ -45,6 +45,9 @@ class Server
         void receiveData(int index);
         void removeData(int index);
 
+        void sendToClient(int clientFd, const std::string& message);
+        void sendData(int index);
+
     private:
         int port;
         int serverFd;

@@ -128,6 +128,8 @@ void Server::acceptClients()
 
         pollFds.push_back(clientPoll);
 
+        sendToClient(clientFd, ":myserver NOTICE * :Welcome!\r\n");
+
         std::cout << "Client connected. fd=" << clientFd  << ", ip=" << ip << ", port=" << clientPort<< std::endl;
     }
 }
@@ -148,25 +150,38 @@ void Server::run()
         
         int i = static_cast<int>(pollFds.size()) - 1;
 
-        while(i >= 1)
+        while (i >= 1)
         {
+            int clientFd = pollFds[i].fd;
             short events = pollFds[i].revents;
 
             if (events & (POLLERR | POLLHUP | POLLNVAL))
             {
                 removeData(i);
+                --i;
                 continue;
             }
 
             if (events & POLLIN)
+            {
                 receiveData(i);
-            i--;
-        }
+
+        // receiveData may have removed this client.
+                if (static_cast<std::vector<pollfd>::size_type>(i) >= pollFds.size() || pollFds[i].fd != clientFd)
+                {
+                    --i;
+                    continue;
+                }
+            }
+            if (events & POLLOUT)
+                sendData(i);
+
+            --i;
+        }   
         if (pollFds[0].revents & POLLIN)
             acceptClients();
     }
 
-       
 }
 
 
@@ -220,7 +235,7 @@ void Server::receiveData(int index)
         if(bytesReceived == 0)
         {
             removeData(index);
-            continue;
+            continue; //remove later maybe
         }
 
         if(errno == EINTR)
@@ -235,7 +250,6 @@ void Server::receiveData(int index)
     }
 }
 
-
 void Server::removeData(int index)
 {
     int clientFd = pollFds[index].fd;
@@ -247,11 +261,69 @@ void Server::removeData(int index)
         delete it->second;
         clients.erase(it);
     }
-
     close(clientFd);
 
     pollFds.erase(pollFds.begin() + index);
 
     std::cout << "Disconnected fd=" << clientFd << std::endl;
 
+}
+
+void Server::sendToClient(int clientFd, const std::string& message)
+{
+    std::map<int, Client*>::iterator it = clients.find(clientFd);
+
+    if (it == clients.end())
+        return;
+
+    it->second->appendOutput(message);
+
+    for (std::vector<pollfd>::size_type i = 0; i < pollFds.size(); ++i)
+    {
+        if (pollFds[i].fd == clientFd)
+        {
+            pollFds[i].events |= POLLOUT;
+            break;
+        }
+    }
+}
+
+void Server::sendData(int index)
+{
+    int clientFd = pollFds[index].fd;
+
+    std::map<int, Client*>::iterator it = clients.find(clientFd);
+
+    if (it == clients.end())
+    {
+        removeData(index);
+        return;
+    }
+
+    Client* client = it->second;
+
+    while (client->hasPendingOutput())
+    {
+        const std::string& data = client->getOutputBuffer();
+
+        ssize_t bytesSent = send(clientFd, data.data(), data.size(), 0);
+
+        if (bytesSent > 0)
+        {
+            client->removeSentOutput(bytesSent);
+            continue;
+        }
+
+        if (bytesSent == -1 && errno == EINTR)
+            continue;
+
+        if (bytesSent == -1 &&
+            (errno == EAGAIN || errno == EWOULDBLOCK))
+            return;
+
+        removeData(index);
+        return;
+    }
+
+    pollFds[index].events &= ~POLLOUT;
 }

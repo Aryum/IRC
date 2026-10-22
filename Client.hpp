@@ -39,12 +39,19 @@ class Client
         bool hasCompleteLine() const;
         std::string extractLine();
 
+        
+        void appendOutput(const std::string& data);
+        bool hasPendingOutput() const;
+        const std::string& getOutputBuffer() const;
+        void removeSentOutput(std::string::size_type bytes);
+
 
     private:
         int fd;
         std::string hostname;
         int port;
         std::string inputBuffer;
+        std::string outputBuffer;
 
 };
 

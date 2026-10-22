@@ -71,6 +71,26 @@ bool Client::hasCompleteLine() const
     return inputBuffer.find("\r\n") != std::string::npos; 
 }
 
+void Client::appendOutput(const std::string& data)
+{
+    outputBuffer += data;
+}
+
+bool Client::hasPendingOutput() const
+{
+    return !outputBuffer.empty();
+}
+
+const std::string& Client::getOutputBuffer() const
+{
+    return outputBuffer;
+}
+
+void Client::removeSentOutput(std::string::size_type bytes)
+{
+    outputBuffer.erase(0, bytes);
+}
+
 std::string Client::extractLine() 
 {
     std::string::size_type pos = inputBuffer.find("\r\n"); 
