@@ -96,6 +96,7 @@ static bool parseChannel(std::string name)
 
 void Server::cmd_JOIN(Client &client, Args args)
 {
+	std::cout << "			a\n";
 	if (args.size() < 1)
 		return err_NEEDMOREPARAMS(client, "JOIN");
 	size_t channelIdx = 0;

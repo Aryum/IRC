@@ -65,7 +65,6 @@ void Server::call_cmd(Client &client, std::string input)
 	std::cout << "Param " << "\n";
 	for (size_t h = 0; h < params.size(); h++)
 		std::cout << "	" << params[h] << "\n";
-	return;
 	CmdMap::iterator it = _cmd.find(command);
 	if (it == _cmd.end())
 		return err_UNKNOWNCOMMAND(client, command);

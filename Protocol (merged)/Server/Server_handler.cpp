@@ -194,9 +194,9 @@ void Server::receiveData(int index)
             while (it->second->hasCompleteLine())
             {
                 std::string line = it->second->extractLine();
-
                 std::cout << "IRC message from fd=" << clientFd << ": " << line << std::endl;
-            }
+				call_cmd(*it->second,line );
+			}
 
             continue;
         }
@@ -240,6 +240,7 @@ void Server::removeData(int index)
 
 void Server::sendToClient(int clientFd, const std::string& message)
 {
+	std::cout << "Sending to client: " << message << std::endl;
     std::map<int, Client*>::iterator it = _clients.find(clientFd);
 
     if (it == _clients.end())

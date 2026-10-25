@@ -33,12 +33,9 @@ $(NAME): $(ALL_ARC) $(MAIN)
 	@$(CC) $(FLAGS) -o $@ -I$(HDR_DIR) $(MAIN) $(ALL_ARC)
 	@echo "$(COLOUR_GREEN)Made main file$(COLOR_WHITE)"
 
-$(ALL_ARC):
-ifeq ($($?),)
+$(ALL_ARC): FORCE
 	@echo "$(COLOUR_BLUE)Updating archives of $@$(COLOR_WHITE)"
-	@cd $(dir $@ ) && make
-	@touch $@
-endif
+	-@cd $(dir $@ ) && (!(make -q) && make) || echo "$(COLOUR_YELLOW)	Already updated$(COLOR_WHITE)"
 
 clean:
 	@echo "$(COLOUR_YELLOW)Cleaning archives$(COLOR_WHITE)"
@@ -57,4 +54,4 @@ re_libs:
 	@$(foreach dir,$(dir $(ALL_ARC)), cd $(dir) && make re && echo$(NEWLINE)$(NEWLINE))
 
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re FORCE
