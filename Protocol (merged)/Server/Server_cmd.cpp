@@ -28,6 +28,7 @@ static bool parseNick(std::string name)
 	}
 	return true;
 }
+
 void Server::cmd_NICK(Client &client, Args args)
 {
 	if (args.size() == 0)
@@ -37,17 +38,14 @@ void Server::cmd_NICK(Client &client, Args args)
 	if (!parseNick(args[0]))
 		return err_ERRONEUSNICKNAME(client, args[0]);
 	ClientMap::iterator it = _clients.begin();
-	bool newConnection = false;
 	while (it != _clients.end())
 	{
-		if (it->first == client.getSocket())
-			newConnection = false;
 		if (it->second->get(Name_Nick) == args[0])
 			return err_NICKNAMEINUSE(client, args[0]);
 		it++;
 	}
 	client.changeNick(args[0]);
-	if (client.isRegistred() && newConnection)
+	if (client.isRegistred() && !client.isWelcome())
 	{
 		_clients.insert(std::make_pair(client.getSocket(), &client));
 		rpl_WELCOME(client, _date);
@@ -68,7 +66,7 @@ void Server::cmd_USER(Client &client, Args args)
 		std::cout << MAGENTA << args[i] << WHITE<< "\n";
 	
 	client.setNames(args[0], args[1], args[3]);
-	if (client.isRegistred())
+	if (client.isRegistred() && !client.isWelcome())
 		rpl_WELCOME(client, _date);
 }
 

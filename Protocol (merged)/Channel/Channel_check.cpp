@@ -9,12 +9,14 @@ bool Channel::checkMultiple(Client &c, Check *checks)
 	}
 	return true;
 }
+
 bool Channel::check_isOnChannel(Client &c)
 {
 	if (getClientStatus(c) == Status_None)
 		return (_server.err_NOTONCHANNEL(c, _name), false);
 	return true;
 }
+
 std::string  Channel::getName()
 {
 	return _name;
@@ -56,7 +58,9 @@ bool Channel::check_key(Client &c)
 	return true;
 }
 
-bool Channel::isInviteOnly()
+bool Channel::openToEnter(Client &c)
 {
-	return _inviteOnly;
+	if (_inviteOnly)
+		return (_server.err_INVITEONLYCHAN(c, _name), false);
+	return true;
 }

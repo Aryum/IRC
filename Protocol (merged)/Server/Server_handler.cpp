@@ -247,12 +247,11 @@ void Server::clientToClient(int clientFd, Client& sender, const std::string& mes
 
 void Server::sendToClient(int clientFd, const std::string& sender, const std::string& message)
 {
-	std::cout << YELLOW << "	Sending to client: " << message << WHITE << std::endl;
     std::map<int, Client*>::iterator it = _clients.find(clientFd);
-
     if (it == _clients.end())
-        return;
+		return ;
 
+	std::cout << YELLOW << "	Sending to " << it->second->get(Name_Full) << ": " << message << WHITE << std::endl;
     it->second->appendOutput(sender + " " + message + "\r\n");
 
     for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)

@@ -10,6 +10,7 @@ enum ClientChannelStatus
 	Status_Op,
 	Status_None
 };
+
 class Channel;
 
 typedef bool (Channel::*Check)(Client &);
@@ -30,7 +31,7 @@ class Channel
 		void inviteClient(Client &op, Client &user);
 		ClientChannelStatus getClientStatus(Client &client);
 		void broadcastMessage(Client &client, std::string message);
-		bool isInviteOnly();
+		bool openToEnter(Client &c);
 	
 	private:
 		Server& _server;
@@ -40,6 +41,7 @@ class Channel
 		std::string _clientPassword;
 		std::map<Client*, ClientChannelStatus> _clients;
 		bool _inviteOnly;
+		bool _topicLocked;
 		long unsigned int _clientLimit;
 		
 		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);

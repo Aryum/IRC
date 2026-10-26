@@ -7,6 +7,7 @@ Client::Client(int socket) :
 		_socket(socket),
 		_correctPassword(false),
 		_namesSet(false),
+		_isWelcome(false),
 		_curChannel(nullptr)
 {}
 Client::~Client()
@@ -24,6 +25,15 @@ bool Client::operator!=(Client &other) const
 int Client::getSocket()
 {
 	return _socket;
+}
+bool Client::isWelcome()
+{
+	return _isWelcome;
+}
+
+void Client::setWelcome()
+{
+	_isWelcome = true;
 }
 
 void Client::changeNick(std::string nick)

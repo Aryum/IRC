@@ -39,14 +39,15 @@ class Server
 		void err_NOTONCHANNEL(Client &client, std::string channel);
 		void err_INVITEONLYCHAN(Client &client, std::string channel);
 		void err_BADCHANNELKEY(Client &client, std::string channel);
-		void rpl_NOTOPIC(Client &client, std::string channel);
-		void rpl_TOPIC(Client &client, std::string channel,std::string topic);
-		void rpl_INVITING(Client &client, std::string invited,std::string channel);
 		void err_CANNOTSENDTOCHAN(Client &client, std::string channel);
 		void err_NORECIPIENT(Client &client);
 		void err_NOTEXTTOSEND(Client &client);
 		void err_ERRONEUSNICKNAME(Client &client, std::string channel);
 		void rpl_WELCOME(Client &client, std::string date);
+		void rpl_CHANNELMODEIS(Client &client, std::string channel, std::string modeArgs);
+		void rpl_INVITING(Client &client, std::string invited,std::string channel);
+		void rpl_NOTOPIC(Client &client, std::string channel);
+		void rpl_TOPIC(Client &client, std::string channel,std::string topic);
 
 	private:
 		int _port;

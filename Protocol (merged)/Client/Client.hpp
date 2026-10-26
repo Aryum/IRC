@@ -25,7 +25,10 @@ class Client
 		void changeNick(std::string nick);
 		void setNames(std::string user, std::string host, std::string nick);
 		void setPasswordVerified();
+		void setWelcome();
 		bool isRegistred();
+		bool isWelcome();
+
 		std::string get(NameType type) const;
 
 
@@ -40,6 +43,7 @@ class Client
         void removeSentOutput(std::string::size_type bytes);
 
 
+
     private:
 		std::string _userName;
 		std::string _nickName;
@@ -48,6 +52,7 @@ class Client
 		int _socket;
 		bool _correctPassword;
 		bool _namesSet;
+		bool _isWelcome;
 		Channel *_curChannel;
         std::string inputBuffer;
         std::string outputBuffer;
