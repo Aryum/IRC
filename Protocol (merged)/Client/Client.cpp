@@ -6,6 +6,7 @@ Client::Client(int socket) :
 		_hostName(),
 		_socket(socket),
 		_correctPassword(false),
+		_namesSet(false),
 		_curChannel(nullptr)
 {}
 Client::~Client()
@@ -36,6 +37,7 @@ void Client::setNames(std::string user, std::string host, std::string nick)
 	_nickName = nick;
 	_userName = user;
 	_fullName = ":"+ nick + "!" + user + "@" + host;
+	_namesSet = true;
 }
 
 
@@ -46,7 +48,7 @@ void Client::setPasswordVerified()
 
 bool Client::isRegistred()
 {
-	return (_hostName != "" && _userName != "" && _nickName != "" && _correctPassword);
+	return (_namesSet && _correctPassword);
 }
 std::string Client::get(NameType type) const
 {

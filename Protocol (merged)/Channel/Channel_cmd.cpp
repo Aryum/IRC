@@ -9,8 +9,10 @@ Channel::Channel(Server& server, Client &client, std::string &name) :
 	_inviteOnly(false),
 	_clientLimit(-1)
 {
-	_clients.insert(std::make_pair(&client, Status_Op));
-	_server.rpl_TOPIC(client, _name, _topicVal);
+	_clients.insert(std::make_pair(&client, Status_Connected));
+	getTopic(client);
+	broadcastMessage(client, client.get(Name_Full)  + " JOIN " + _name, true);
+	std::cout << "Created channel " << name << "\n";
 }
 
 ClientChannelStatus Channel::getClientStatus( Client &client)
@@ -31,14 +33,14 @@ ClientChannelStatus Channel::getClientStatus( Client &client)
 void Channel::joinClient(Client &client, std::string password)
 {
 	_clientPassword = password;
-	Check checks[] = {	&Channel::check_isOnChannel, 
-						&Channel::check_canInvite, 
+	Check checks[] = {	&Channel::check_canInvite, 
 						&Channel::check_fullChannel, 
 						&Channel::check_key, NULL};
 	if (checkMultiple(client, checks))
 		return ;
-	_server.rpl_TOPIC(client, _name, _topicVal);
 	_clients.insert(std::make_pair(&client, Status_Connected));
+	getTopic(client);
+	broadcastMessage(client, client.get(Name_Full)  + "JOIN" + _name, true);
 }
 
 void Channel::partClient(Client &client)
@@ -53,7 +55,7 @@ void Channel::kickClient(Client &op, Client &user, std::string reason)
 	if (!check_isOperator(op) || !check_isOnChannel(user))
 		return;
 	_clients.erase(&user);
-	broadcastMessage(op, ":" + op.get(Name_Full) +  "KICK" + _name + user.get(Name_Nick) + ":" + reason);
+	broadcastMessage(op, op.get(Name_Full) +  "KICK" + _name + user.get(Name_Nick) + ":" + reason, true);
 }
 
 void Channel::inviteClient(Client &op, Client &user)
@@ -68,8 +70,6 @@ void Channel::inviteClient(Client &op, Client &user)
 
 void Channel::getTopic(Client &client)
 {
-	if (!check_isOperator(client))
-		return ;
 	if (_topicVal == "")
 		_server.rpl_NOTOPIC(client, _name);
 	else
@@ -158,14 +158,15 @@ void Channel::changeMode(Client &client, Args args)
 }
 
 
-void Channel::broadcastMessage(Client &client, std::string message)
+void Channel::broadcastMessage(Client &client, std::string message, bool replySender)
 {
+	std::cout << "sending message\n";
 	if (getClientStatus(client) == Status_None)
 		return _server.err_CANNOTSENDTOCHAN(client, _name);
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		if (client != *(it->first))
+		if (replySender || client != *(it->first))
 			_server.sendToClient(it->first->getSocket(), message);
 		it++;
 	}

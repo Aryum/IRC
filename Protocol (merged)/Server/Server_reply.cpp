@@ -22,8 +22,8 @@ void Server::rpl_WELCOME(Client &client, std::string date)
 	std::string user = client.get(Name_User);
 	std::string host = client.get(Name_Host);
 
-	sendToClient(client.getSocket(),"001 " + nick + ":Welcome to the Internet Relay Network!" + user + "@" + host);
-	sendToClient(client.getSocket(),"002 " + nick + "Your host is IRC, running version 1.0");
-	sendToClient(client.getSocket(),"003 " + nick + "This server was created " + date);
-	sendToClient(client.getSocket(),"004 " + nick + "IRC 1.0 itkol");
+	sendToClient(client.getSocket(),"001 " + nick + " :Welcome to the Internet Relay Network!" + user + "@" + host);
+	sendToClient(client.getSocket(),"002 " + nick + " Your host is IRC, running version 1.0");
+	sendToClient(client.getSocket(),"003 " + nick + " This server was created " + date);
+	sendToClient(client.getSocket(),"004 " + nick + " IRC 1.0 itkol");
 }

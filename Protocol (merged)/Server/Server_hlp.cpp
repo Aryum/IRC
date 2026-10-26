@@ -5,7 +5,7 @@ std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 {
 	size_t curIdx;
 	std::string ret;
-	if (!prefix && input[0] == ':')
+	if (!prefix && input[idx] == ':')
 		curIdx = std::string::npos;
 	else
 		curIdx = input.find(c, idx);

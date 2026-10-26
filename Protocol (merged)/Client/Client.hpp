@@ -47,6 +47,7 @@ class Client
 		std::string _fullName;
 		int _socket;
 		bool _correctPassword;
+		bool _namesSet;
 		Channel *_curChannel;
         std::string inputBuffer;
         std::string outputBuffer;

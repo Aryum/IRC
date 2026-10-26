@@ -39,12 +39,12 @@ void Server::err_NOSUCHCHANNEL(Client &client, std::string channel)
 
 void Server::Server::err_ERRONEUSNICKNAME(Client &client, std::string nick)
 {
-	sendToClient(client.getSocket() , "401 " + nick + " :No such nick/channel");
+	sendToClient(client.getSocket() , "432 " + nick + " :Erroneus nickname");
 }
 //args-> nick name
 void Server::err_NOSUCHNICK(Client &client, std::string nick)
 {
-	sendToClient(client.getSocket() , "432 " + nick + " :Erroneus nickname");
+	sendToClient(client.getSocket() , "401 " + nick + " :No such nick/channel");
 }
 
 

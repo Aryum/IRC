@@ -96,8 +96,6 @@ void Server::acceptClients()
 
         _pollFds.push_back(clientPoll);
 
-        sendToClient(clientFd, ":myserver NOTICE * :Welcome!\r\n");
-
         std::cout << "Client connected. fd=" << clientFd  << ", ip=" << ip << ", port=" << clientPort<< std::endl;
     }
 }
@@ -240,13 +238,13 @@ void Server::removeData(int index)
 
 void Server::sendToClient(int clientFd, const std::string& message)
 {
-	std::cout << "Sending to client: " << message << std::endl;
+	std::cout << YELLOW << "	Sending to client: " << message << WHITE << std::endl;
     std::map<int, Client*>::iterator it = _clients.find(clientFd);
 
     if (it == _clients.end())
         return;
 
-    it->second->appendOutput(message);
+    it->second->appendOutput(":IRC " + message + "\r\n");
 
     for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)
     {

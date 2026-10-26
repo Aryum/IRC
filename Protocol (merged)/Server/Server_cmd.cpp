@@ -9,6 +9,8 @@ void Server::cmd_PASS(Client &client, Args args)
 	if (args[0] != _password)
 		return err_PASSWDMISMATCH(client);
 	client.setPasswordVerified();
+	if (client.isRegistred())
+		rpl_WELCOME(client, _date);
 }
 
 static bool parseNick(std::string name)
@@ -18,9 +20,7 @@ static bool parseNick(std::string name)
 	std::string allowed = "-[]\\`^{}";
 	for (size_t i = 1; i < name.size(); i++)
 	{
-		if (std::isalpha(name[i]))
-			continue;
-		if (std::isdigit(name[i]))
+		if (std::isalpha(name[i]) || std::isdigit(name[i]))
 			continue;
 		if (allowed.find(name[i]) != std::string::npos)
 			continue;
@@ -34,7 +34,7 @@ void Server::cmd_NICK(Client &client, Args args)
 		return err_NONICKNAMEGIVEN(client);
 	if (args[0].length() < 1 || args[0].length() > 9)
 		return err_ERRONEUSNICKNAME(client, args[0]);
-	if (parseNick(args[0]))
+	if (!parseNick(args[0]))
 		return err_ERRONEUSNICKNAME(client, args[0]);
 	ClientMap::iterator it = _clients.begin();
 	bool newConnection = false;
@@ -60,12 +60,16 @@ void Server::cmd_USER(Client &client, Args args)
 	ClientMap::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		if (it->first == client.getSocket())
+		if (it->first == client.isRegistred())
 			return err_ALREADYREGISTRED(client);
 		it++;
 	}
+	for (size_t i = 0; i < args.size(); i++)
+		std::cout << MAGENTA << args[i] << WHITE<< "\n";
+	
 	client.setNames(args[0], args[1], args[3]);
-
+	if (client.isRegistred())
+		rpl_WELCOME(client, _date);
 }
 
 
@@ -82,7 +86,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 	{
 		if (_channels[i].getClientStatus(client) != Status_None)
 		{
-			_channels[i].broadcastMessage(client, reason);
+			_channels[i].broadcastMessage(client, reason, false);
 			_channels[i].partClient(client);
 		}
 	}
@@ -96,7 +100,6 @@ static bool parseChannel(std::string name)
 
 void Server::cmd_JOIN(Client &client, Args args)
 {
-	std::cout << "			a\n";
 	if (args.size() < 1)
 		return err_NEEDMOREPARAMS(client, "JOIN");
 	size_t channelIdx = 0;
@@ -214,7 +217,7 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 
 		std::string receiver = nextChar(args[0], targetIdx, ',');
 		if (parseChannel(receiver) && getChannel(client, receiver, &tarChannel))
-			tarChannel->broadcastMessage(client, args[1]);
+			tarChannel->broadcastMessage(client, args[1], false);
 		else if (getClient(client, receiver, &tarClient))
 			sendToClient(client.getSocket(), args[1]);
 	}

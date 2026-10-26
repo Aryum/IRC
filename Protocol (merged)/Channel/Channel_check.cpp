@@ -9,7 +9,6 @@ bool Channel::checkMultiple(Client &c, Check *checks)
 	}
 	return true;
 }
-
 bool Channel::check_isOnChannel(Client &c)
 {
 	if (getClientStatus(c) == Status_None)
