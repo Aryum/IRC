@@ -86,7 +86,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 	{
 		if (_channels[i].getClientStatus(client) != Status_None)
 		{
-			_channels[i].broadcastMessage(client, reason, false);
+			_channels[i].broadcastMessage(client, reason);
 			_channels[i].partClient(client);
 		}
 	}
@@ -217,8 +217,8 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 
 		std::string receiver = nextChar(args[0], targetIdx, ',');
 		if (parseChannel(receiver) && getChannel(client, receiver, &tarChannel))
-			tarChannel->broadcastMessage(client, args[1], false);
+			tarChannel->broadcastMessage(client, args[1]);
 		else if (getClient(client, receiver, &tarClient))
-			sendToClient(client.getSocket(), args[1]);
+			clientToClient(tarClient->getSocket(), client, args[1]);
 	}
 }

@@ -20,7 +20,9 @@ class Server
         void receiveData(int index);
         void removeData(int index);
 
-        void sendToClient(int clientFd, const std::string& message);
+		void serverToClient(int clientFd, const std::string& message);
+		void clientToClient(int clientFd, Client& sender, const std::string& message);
+
         void sendData(int index);
 
 		void err_PASSWDMISMATCH(Client &client);
@@ -70,6 +72,7 @@ class Server
 		void cmd_TOPIC(Client &client, Args args);
 		void cmd_MODE(Client &client, Args args);
 		void cmd_PRIVMSG(Client &client, Args args);
+        void sendToClient(int clientFd, const std::string& sender, const std::string& message);
 
 
 		

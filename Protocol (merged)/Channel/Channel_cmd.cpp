@@ -11,7 +11,7 @@ Channel::Channel(Server& server, Client &client, std::string &name) :
 {
 	_clients.insert(std::make_pair(&client, Status_Connected));
 	getTopic(client);
-	broadcastMessage(client, client.get(Name_Full)  + " JOIN " + _name, true);
+	_server.clientToClient(client.getSocket(), client, "JOIN " + _name);
 	std::cout << "Created channel " << name << "\n";
 }
 
@@ -40,7 +40,7 @@ void Channel::joinClient(Client &client, std::string password)
 		return ;
 	_clients.insert(std::make_pair(&client, Status_Connected));
 	getTopic(client);
-	broadcastMessage(client, client.get(Name_Full)  + "JOIN" + _name, true);
+	broadcastMessage(client, "JOIN" + _name);
 }
 
 void Channel::partClient(Client &client)
@@ -55,7 +55,7 @@ void Channel::kickClient(Client &op, Client &user, std::string reason)
 	if (!check_isOperator(op) || !check_isOnChannel(user))
 		return;
 	_clients.erase(&user);
-	broadcastMessage(op, op.get(Name_Full) +  "KICK" + _name + user.get(Name_Nick) + ":" + reason, true);
+	broadcastMessage(op, op.get(Name_Full) +  "KICK" + _name + user.get(Name_Nick) + ":" + reason);
 }
 
 void Channel::inviteClient(Client &op, Client &user)
@@ -158,7 +158,7 @@ void Channel::changeMode(Client &client, Args args)
 }
 
 
-void Channel::broadcastMessage(Client &client, std::string message, bool replySender)
+void Channel::broadcastMessage(Client &client, std::string message)
 {
 	std::cout << "sending message\n";
 	if (getClientStatus(client) == Status_None)
@@ -166,8 +166,8 @@ void Channel::broadcastMessage(Client &client, std::string message, bool replySe
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		if (replySender || client != *(it->first))
-			_server.sendToClient(it->first->getSocket(), message);
+		if (client != *(it->first))
+			_server.clientToClient(it->first->getSocket(), client, message);
 		it++;
 	}
 }

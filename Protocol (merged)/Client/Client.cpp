@@ -36,7 +36,7 @@ void Client::setNames(std::string user, std::string host, std::string nick)
 	_hostName = host;
 	_nickName = nick;
 	_userName = user;
-	_fullName = ":"+ nick + "!" + user + "@" + host;
+	_fullName = nick + "!" + user + "@" + host;
 	_namesSet = true;
 }
 

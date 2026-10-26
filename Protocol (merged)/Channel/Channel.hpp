@@ -29,7 +29,7 @@ class Channel
 		void changeMode(Client &client, Args args);
 		void inviteClient(Client &op, Client &user);
 		ClientChannelStatus getClientStatus(Client &client);
-		void broadcastMessage(Client &client, std::string message, bool replySender);
+		void broadcastMessage(Client &client, std::string message);
 		bool isInviteOnly();
 	
 	private:

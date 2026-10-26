@@ -47,11 +47,7 @@ fclean:
 	@$(RM) $(NAME)
 	@$(foreach dir,$(dir $(ALL_ARC)), cd $(dir) && make fclean && echo$(NEWLINE)$(NEWLINE))
 
-re: re_libs all
+re: clean all
 	
-re_libs:
-	@echo "$(COLOUR_BLUE)Remaking everything$(COLOR_WHITE)"
-	@$(foreach dir,$(dir $(ALL_ARC)), cd $(dir) && make re && echo$(NEWLINE)$(NEWLINE))
-
 
 .PHONY: all clean fclean re FORCE

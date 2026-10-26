@@ -236,7 +236,16 @@ void Server::removeData(int index)
 
 }
 
-void Server::sendToClient(int clientFd, const std::string& message)
+void Server::serverToClient(int clientFd, const std::string& message)
+{
+	sendToClient(clientFd, ":IRC", message);
+}
+void Server::clientToClient(int clientFd, Client& sender, const std::string& message)
+{
+	sendToClient(clientFd, ":" + sender.get(Name_Full), message);
+}
+
+void Server::sendToClient(int clientFd, const std::string& sender, const std::string& message)
 {
 	std::cout << YELLOW << "	Sending to client: " << message << WHITE << std::endl;
     std::map<int, Client*>::iterator it = _clients.find(clientFd);
@@ -244,7 +253,7 @@ void Server::sendToClient(int clientFd, const std::string& message)
     if (it == _clients.end())
         return;
 
-    it->second->appendOutput(":IRC " + message + "\r\n");
+    it->second->appendOutput(sender + " " + message + "\r\n");
 
     for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)
     {
