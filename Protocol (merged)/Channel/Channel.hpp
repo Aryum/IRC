@@ -20,8 +20,9 @@ class Channel
 		Channel(Server& server, Client &client, std::string &name);
 
 
-		std::string  getName();
-
+		std::string getName();
+		ClientChannelStatus getClientStatus(Client &client);
+		std::string getModes(Client &client);
 		void joinClient(Client &client, std::string password);
 		void kickClient(Client &op, Client &user, std::string reason);
 		void partClient(Client &client);
@@ -29,7 +30,6 @@ class Channel
 		void getTopic(Client &client);
 		void changeMode(Client &client, Args args);
 		void inviteClient(Client &op, Client &user);
-		ClientChannelStatus getClientStatus(Client &client);
 		void broadcastMessage(Client &client, std::string message);
 		bool openToEnter(Client &c);
 	
@@ -39,11 +39,13 @@ class Channel
 		std::string _topicVal;
 		std::string _passwordVal;
 		std::string _clientPassword;
+		std::string _mode;
 		std::map<Client*, ClientChannelStatus> _clients;
 		bool _inviteOnly;
 		bool _topicLocked;
 		long unsigned int _clientLimit;
 		
+		void updateMode(char c, bool adding);
 		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
 		void toggleOp(Client &client, std::string name, bool on);
 		bool check_isOnChannel(Client &c);

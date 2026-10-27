@@ -20,8 +20,8 @@ class Server
         void receiveData(int index);
         void removeData(int index);
 
-		void serverToClient(int clientFd, const std::string& message);
-		void clientToClient(int clientFd, Client& sender, const std::string& message);
+		void serverToClient(Client& target, const std::string& message);
+		void clientToClient(Client& target, Client& sender, const std::string& message);
 
         void sendData(int index);
 
@@ -44,7 +44,7 @@ class Server
 		void err_NOTEXTTOSEND(Client &client);
 		void err_ERRONEUSNICKNAME(Client &client, std::string channel);
 		void rpl_WELCOME(Client &client, std::string date);
-		void rpl_CHANNELMODEIS(Client &client, std::string channel, std::string modeArgs);
+		void rpl_CHANNELMODEIS(Client &client, Channel &channel);
 		void rpl_INVITING(Client &client, std::string invited,std::string channel);
 		void rpl_NOTOPIC(Client &client, std::string channel);
 		void rpl_TOPIC(Client &client, std::string channel,std::string topic);
@@ -59,8 +59,6 @@ class Server
 		ClientMap _clients;
 		CmdMap _cmd;
 
-		void create_cmdMap();
-
 		std::string getDate() const;
 		void cmd_PASS(Client &client, Args args);
 		void cmd_NICK(Client &client, Args args);
@@ -73,10 +71,9 @@ class Server
 		void cmd_TOPIC(Client &client, Args args);
 		void cmd_MODE(Client &client, Args args);
 		void cmd_PRIVMSG(Client &client, Args args);
-        void sendToClient(int clientFd, const std::string& sender, const std::string& message);
-
 
 		
+		void sendToClient(Client &client, const std::string& sender, const std::string& message);
 	
 
 		
@@ -89,6 +86,7 @@ class Server
 //move to its own helper file, it contains all the system headers as well
 std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix);
 std::string nextChar(const std::string &input, size_t &idx, char c);
+
 
 
 #endif

@@ -5,13 +5,15 @@ Channel::Channel(Server& server, Client &client, std::string &name) :
 	_name(name),
 	_topicVal(),
 	_passwordVal(),
+	_clientPassword(),
+	_mode(),
 	_clients(),
 	_inviteOnly(false),
 	_clientLimit(-1)
 {
 	_clients.insert(std::make_pair(&client, Status_Connected));
 	getTopic(client);
-	_server.clientToClient(client.getSocket(), client, "JOIN " + _name);
+	_server.clientToClient(client, client, "JOIN " + _name);
 	std::cout << "Created channel " << name << "\n";
 }
 
@@ -32,15 +34,17 @@ ClientChannelStatus Channel::getClientStatus( Client &client)
 //maybbe just return an int that will be read by the map reply
 void Channel::joinClient(Client &client, std::string password)
 {
+	std::cout << RED << "	I AM RUNNiNG :" << client.get(Name_Full) << " trying to join" << std::endl;
 	_clientPassword = password;
 	Check checks[] = {	&Channel::openToEnter, 
 						&Channel::check_fullChannel, 
 						&Channel::check_key, NULL};
-	if (checkMultiple(client, checks))
+	if (!checkMultiple(client, checks))
 		return ;
 	_clients.insert(std::make_pair(&client, Status_Connected));
 	getTopic(client);
-	broadcastMessage(client, "JOIN" + _name);
+	_server.clientToClient(client, client, "JOIN " + _name);
+	broadcastMessage(client, "JOIN " + _name);
 }
 
 void Channel::partClient(Client &client)
@@ -62,7 +66,7 @@ void Channel::inviteClient(Client &op, Client &user)
 {
 	Check checks[] = {	&Channel::check_canInvite, 
 						&Channel::check_fullChannel, NULL};
-	if (checkMultiple(op, checks) || check_isOnChannel(user))
+	if (!checkMultiple(op, checks) || !check_isOnChannel(user))
 		return ;
 	_server.rpl_INVITING(op, user.get(Name_Nick), _name);
 }
@@ -107,6 +111,17 @@ void Channel::toggleOp(Client &client, std::string name, bool on)
 	return _server.err_NOTONCHANNEL(client, _name);
 }
 
+void Channel::updateMode(char c, bool adding)
+{
+	size_t pos = _mode.find(c);
+	if (adding)
+	{
+		if (pos == std::string::npos)
+			_mode.append(&c);
+	}
+	else if (pos != std::string::npos)
+		_mode.erase(pos, 1);
+}
 
 void Channel::changeMode(Client &client, Args args)
 {
@@ -126,18 +141,21 @@ void Channel::changeMode(Client &client, Args args)
 		{
 			case 'i':
 				_inviteOnly = adding;
+				updateMode(args[1][i], adding);
 				break;
 			case 't':
 				if (adding)
 					consumeArg(client, args, curParam, _topicVal);
 				else
 					_topicVal = "";
+				updateMode(args[1][i], adding);
 				break;
 			case 'k':
 				if (adding)
 					consumeArg(client, args, curParam,_passwordVal);
 				else
 					_passwordVal = "";
+				updateMode(args[1][i], adding);
 				break;
 			case 'o':
 				if (consumeArg(client, args, curParam, var))
@@ -148,6 +166,7 @@ void Channel::changeMode(Client &client, Args args)
 					_clientLimit = atoi(var.c_str());
 				else
 					_clientLimit = -1;
+				updateMode(args[1][i], adding);
 				break;
 			default:
 				_server.err_UNKNOWNMODE(client, args[1][i]);
@@ -160,14 +179,42 @@ void Channel::changeMode(Client &client, Args args)
 
 void Channel::broadcastMessage(Client &client, std::string message)
 {
-	std::cout << "sending message\n";
 	if (getClientStatus(client) == Status_None)
 		return _server.err_CANNOTSENDTOCHAN(client, _name);
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
 		if (client != *(it->first))
-			_server.clientToClient(it->first->getSocket(), client, message);
+			_server.clientToClient(*it->first, client, "PRIVMSG " + _name + " " + message);
 		it++;
 	}
+}
+
+std::string Channel::getModes(Client &client)
+{
+	std::string ret = _mode;
+	std::ostringstream stream;
+
+	for (size_t i = 0; i < _mode.size(); i++)
+	{
+		switch (_mode[i])
+		{
+			case 'k':
+				ret += " ";
+				if (getClientStatus(client) != Status_None)
+					ret += _passwordVal;
+				else
+					ret += "*";
+				break;
+			case 'l':
+				ret += " ";
+				stream << _clientLimit;
+				ret += stream.str();
+				break;
+			default:
+				break;
+
+		}
+	}
+	return ret;
 }

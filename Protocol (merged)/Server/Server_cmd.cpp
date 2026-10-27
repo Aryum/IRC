@@ -185,11 +185,14 @@ void Server::cmd_TOPIC(Client &client, Args args)
 
 void Server::cmd_MODE(Client &client, Args args)
 {
-	if (args.size() < 2)
+	if (args.size() < 1)
 		return err_NEEDMOREPARAMS(client, "MODE");
+	
 	Channel *channel = nullptr;
 	if (!getChannel(client, args[0], &channel))
 		return ;
+	if (args.size() == 1)
+		return rpl_CHANNELMODEIS(client, *channel);
 	channel->changeMode(client, args);
 }
 
@@ -217,6 +220,6 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 		if (parseChannel(receiver) && getChannel(client, receiver, &tarChannel))
 			tarChannel->broadcastMessage(client, args[1]);
 		else if (getClient(client, receiver, &tarClient))
-			clientToClient(tarClient->getSocket(), client, args[1]);
+			clientToClient(*tarClient, client, "PRIVMSG " + client.get(Name_Nick) + " " + args[1]);
 	}
 }

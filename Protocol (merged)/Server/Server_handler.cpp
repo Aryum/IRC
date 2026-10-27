@@ -236,27 +236,24 @@ void Server::removeData(int index)
 
 }
 
-void Server::serverToClient(int clientFd, const std::string& message)
+void Server::serverToClient(Client& target, const std::string& message)
 {
-	sendToClient(clientFd, ":IRC", message);
+	sendToClient(target, ":IRC", message);
 }
-void Server::clientToClient(int clientFd, Client& sender, const std::string& message)
+void Server::clientToClient(Client& target, Client& sender, const std::string& message)
 {
-	sendToClient(clientFd, ":" + sender.get(Name_Full), message);
+	sendToClient(target, ":" + sender.get(Name_Full), message);
 }
 
-void Server::sendToClient(int clientFd, const std::string& sender, const std::string& message)
+void Server::sendToClient(Client &client, const std::string& sender, const std::string& message)
 {
-    std::map<int, Client*>::iterator it = _clients.find(clientFd);
-    if (it == _clients.end())
-		return ;
 
-	std::cout << YELLOW << "	Sending to " << it->second->get(Name_Full) << ": " << message << WHITE << std::endl;
-    it->second->appendOutput(sender + " " + message + "\r\n");
+	std::cout << YELLOW << "	Sending to " << client.get(Name_Full) << "FD=" << client.getSocket() << ": " << sender + " " + message << WHITE << std::endl;
+    client.appendOutput(sender + " " + message + "\r\n");
 
     for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)
     {
-        if (_pollFds[i].fd == clientFd)
+        if (_pollFds[i].fd == client.getSocket())
         {
             _pollFds[i].events |= POLLOUT;
             break;
