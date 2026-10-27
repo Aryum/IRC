@@ -216,6 +216,12 @@ void Server::receiveData(int index)
 
     }
 }
+void Server::removeChannel(Channel &channel)
+{
+	std::vector<Channel>::iterator it = std::find(_channels.begin(), _channels.end(), channel);
+	if (it != _channels.end())
+		_channels.erase(it);
+}
 
 void Server::removeData(int index)
 {

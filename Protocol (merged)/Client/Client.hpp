@@ -18,8 +18,8 @@ class Client
 		Client(int socket);
         ~Client();
 
-		bool operator==(Client &other) const;
-		bool operator!=(Client &other) const;
+		bool operator==(const Client &other) const;
+		bool operator!=(const Client &other) const;
 
 		int getSocket();
 		void changeNick(std::string nick);

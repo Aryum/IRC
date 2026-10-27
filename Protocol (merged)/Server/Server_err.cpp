@@ -6,45 +6,45 @@ void Server::err_PASSWDMISMATCH(Client &client)
 }
 void Server::err_UNKNOWNCOMMAND(Client &client, std::string cmd)
 {
-	serverToClient(client , "421 " + cmd + " :Unknown command");
+	serverToClient(client , "421 " + client.get(Name_Nick) + " " + cmd + " :Unknown command");
 }
 //args-> empty
 void Server::err_ALREADYREGISTRED(Client &client)
 {
-	serverToClient(client , "462 :You may not reregister");
+	serverToClient(client , "462 "+ client.get(Name_Nick) + " :You may not reregister");
 }
 
 //args-> cmd name
 void Server::err_NEEDMOREPARAMS(Client &client, std::string cmd)
 {
-	serverToClient(client , "461 " + cmd + " :Not enough parameters");
+	serverToClient(client , "461 " + client.get(Name_Nick) + " " + cmd + " :Not enough parameters");
 }
 
 //args-> nickname
 void Server::err_NICKNAMEINUSE(Client &client, std::string nick)
 {
-	serverToClient(client , "433 " + nick + " :Nickname is already in use");
+	serverToClient(client , "433 " + client.get(Name_Nick) + " " + nick + " :Nickname is already in use");
 }
 
 //args-> empty
 void Server::err_NONICKNAMEGIVEN(Client &client)
 {
-	serverToClient(client , "431 :No nickname given");
+	serverToClient(client , "431 " + client.get(Name_Nick) + " :No nickname given");
 }
 //args-> channel name
 void Server::err_NOSUCHCHANNEL(Client &client, std::string channel)
 {
-	serverToClient(client , "403 " + channel + " :No such channel");
+	serverToClient(client , "403 " + client.get(Name_Nick) + " " + channel + " :No such channel");
 }
 
 void Server::Server::err_ERRONEUSNICKNAME(Client &client, std::string nick)
 {
-	serverToClient(client , "432 " + nick + " :Erroneus nickname");
+	serverToClient(client , "432 " + client.get(Name_Nick) + " " + nick + " :Erroneus nickname");
 }
 //args-> nick name
 void Server::err_NOSUCHNICK(Client &client, std::string nick)
 {
-	serverToClient(client , "401 " + nick + " :No such nick/channel");
+	serverToClient(client , "401 " + client.get(Name_Nick) + " " + nick + " :No such nick/channel");
 }
 
 
@@ -78,17 +78,17 @@ void Server::err_BADCHANNELKEY(Client &client, std::string channel)
 
 void Server::err_CANNOTSENDTOCHAN(Client &client, std::string channel)
 {
-	serverToClient(client , "404 " + channel + " :Cannot send to channel");
+	serverToClient(client , "404 " + client.get(Name_Nick) + " " + channel + " :Cannot send to channel");
 
 }
 
 void Server::err_NORECIPIENT(Client &client)
 {
-	serverToClient(client , "411 :No recipient given (PRIVMSG)");
+	serverToClient(client , "411 " + client.get(Name_Nick) + " :No recipient given (PRIVMSG)");
 }
 
 
 void Server::err_NOTEXTTOSEND(Client &client)
 {
-	serverToClient(client , "412 :No text to send");
+	serverToClient(client , "412 " + client.get(Name_Nick) + " :No text to send");
 }

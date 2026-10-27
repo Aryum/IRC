@@ -19,6 +19,8 @@ class Server
         void acceptClients();
         void receiveData(int index);
         void removeData(int index);
+        void removeChannel(Channel &channel);
+
 
 		void serverToClient(Client& target, const std::string& message);
 		void clientToClient(Client& target, Client& sender, const std::string& message);

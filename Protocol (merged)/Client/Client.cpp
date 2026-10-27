@@ -2,7 +2,7 @@
 
 Client::Client(int socket) :
 		_userName(),
-		_nickName(),
+		_nickName("*"),
 		_hostName(),
 		_socket(socket),
 		_correctPassword(false),
@@ -12,12 +12,12 @@ Client::Client(int socket) :
 {}
 Client::~Client()
 {}
-bool Client::operator==(Client &other) const
+bool Client::operator==(const Client &other) const
 {
 	return _socket == other._socket;
 }
 
-bool Client::operator!=(Client &other) const
+bool Client::operator!=(const Client &other) const
 {
 	return !((*this) == other);
 }

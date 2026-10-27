@@ -84,7 +84,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 	{
 		if (_channels[i].getClientStatus(client) != Status_None)
 		{
-			_channels[i].broadcastMessage(client, reason);
+			_channels[i].broadcastMessage(client, "QUIT",reason, false);
 			_channels[i].partClient(client);
 		}
 	}
@@ -115,7 +115,7 @@ void Server::cmd_JOIN(Client &client, Args args)
 			Channel *channel = getChannel(name);
 			std::string reply;
 			if (channel == nullptr)
-				_channels.push_back(Channel(*this, client, name));
+				_channels.push_back(Channel(this, client, name));
 			else
 				channel->joinClient(client, password);
 		}
@@ -165,7 +165,7 @@ void Server::cmd_INVITE(Client &client, Args args)
 		return err_NEEDMOREPARAMS(client, "INVITE");
 	Client *user = nullptr;
 	Channel *channel = nullptr;
-	if (!getClient(client, args[1], &user) || !getChannel(client, args[2], &channel))
+	if (!getClient(client, args[0], &user) || !getChannel(client, args[1], &channel))
 		return ; 
 	channel->inviteClient(client, *user);
 }
@@ -218,7 +218,7 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 
 		std::string receiver = nextChar(args[0], targetIdx, ',');
 		if (parseChannel(receiver) && getChannel(client, receiver, &tarChannel))
-			tarChannel->broadcastMessage(client, args[1]);
+			tarChannel->broadcastMessage(client, "PRIVMSG",args[1], false);
 		else if (getClient(client, receiver, &tarClient))
 			clientToClient(*tarClient, client, "PRIVMSG " + client.get(Name_Nick) + " " + args[1]);
 	}

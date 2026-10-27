@@ -7,6 +7,7 @@
 enum ClientChannelStatus
 {
 	Status_Connected,
+	Status_Invited,
 	Status_Op,
 	Status_None
 };
@@ -17,7 +18,8 @@ typedef bool (Channel::*Check)(Client &);
 class Channel
 {
 	public:
-		Channel(Server& server, Client &client, std::string &name);
+		Channel(Server* server, Client &client, std::string &name);
+		bool operator==(const Channel &other) const;
 
 
 		std::string getName();
@@ -30,11 +32,11 @@ class Channel
 		void getTopic(Client &client);
 		void changeMode(Client &client, Args args);
 		void inviteClient(Client &op, Client &user);
-		void broadcastMessage(Client &client, std::string message);
+		void broadcastMessage(Client &client, std::string cmd, std::string message, bool sendSender);
 		bool openToEnter(Client &c);
 	
 	private:
-		Server& _server;
+		Server* _server;
 		std::string _name;
 		std::string _topicVal;
 		std::string _passwordVal;

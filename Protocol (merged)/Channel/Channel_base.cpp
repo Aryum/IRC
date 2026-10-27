@@ -1,6 +1,6 @@
 #include "Channel.hpp"
 
-Channel::Channel(Server& server, Client &client, std::string &name) :
+Channel::Channel(Server* server, Client &client, std::string &name) :
 	_server(server),
 	_name(name),
 	_topicVal(),
@@ -11,10 +11,14 @@ Channel::Channel(Server& server, Client &client, std::string &name) :
 	_inviteOnly(false),
 	_clientLimit(-1)
 {
-	_clients.insert(std::make_pair(&client, Status_Connected));
+	_clients.insert(std::make_pair(&client, Status_Op));
 	getTopic(client);
-	_server.clientToClient(client, client, "JOIN " + _name);
-	std::cout << "Created channel " << name << "\n";
+	_server->clientToClient(client, client, "JOIN " + _name);
+}
+
+bool Channel::operator==(const Channel &other) const
+{
+	return _name == other._name;
 }
 
 ClientChannelStatus Channel::getClientStatus( Client &client)
@@ -34,7 +38,6 @@ ClientChannelStatus Channel::getClientStatus( Client &client)
 //maybbe just return an int that will be read by the map reply
 void Channel::joinClient(Client &client, std::string password)
 {
-	std::cout << RED << "	I AM RUNNiNG :" << client.get(Name_Full) << " trying to join" << std::endl;
 	_clientPassword = password;
 	Check checks[] = {	&Channel::openToEnter, 
 						&Channel::check_fullChannel, 
@@ -43,8 +46,8 @@ void Channel::joinClient(Client &client, std::string password)
 		return ;
 	_clients.insert(std::make_pair(&client, Status_Connected));
 	getTopic(client);
-	_server.clientToClient(client, client, "JOIN " + _name);
-	broadcastMessage(client, "JOIN " + _name);
+	_server->clientToClient(client, client, "JOIN " + _name);
+	broadcastMessage(client, "PRIVMSG", "JOIN " + _name, false);
 }
 
 void Channel::partClient(Client &client)
@@ -52,37 +55,41 @@ void Channel::partClient(Client &client)
 	if (!check_isOnChannel(client))
 		return ;
 	_clients.erase(&client);
+	if (_clients.size() == 0)
+		_server->removeChannel(*this);
 }
 
 void Channel::kickClient(Client &op, Client &user, std::string reason)
 {
-	if (!check_isOperator(op) || !check_isOnChannel(user))
+	if (!check_isOperator(op))
 		return;
+	broadcastMessage(op, "KICK", _name + user.get(Name_Nick) + ":" + reason, true);
 	_clients.erase(&user);
-	broadcastMessage(op, op.get(Name_Full) +  "KICK" + _name + user.get(Name_Nick) + ":" + reason);
 }
 
 void Channel::inviteClient(Client &op, Client &user)
 {
 	Check checks[] = {	&Channel::check_canInvite, 
 						&Channel::check_fullChannel, NULL};
-	if (!checkMultiple(op, checks) || !check_isOnChannel(user))
+	if (!checkMultiple(op, checks))
 		return ;
-	_server.rpl_INVITING(op, user.get(Name_Nick), _name);
+	_clients.insert(std::make_pair(&user, Status_Invited));
+	_server->rpl_INVITING(op, user.get(Name_Nick), _name);
+	_server->clientToClient(user, op, "INVITE " + user.get(Name_Nick) + " :" + _name);
 }
 
 
 void Channel::getTopic(Client &client)
 {
 	if (_topicVal == "")
-		_server.rpl_NOTOPIC(client, _name);
+		_server->rpl_NOTOPIC(client, _name);
 	else
-		_server.rpl_TOPIC(client, _name, _topicVal);
+		_server->rpl_TOPIC(client, _name, _topicVal);
 }
 
 void Channel::changeTopic(Client &client, std::string topic)
 {
-	if (!check_isOperator(client))
+	if (_topicLocked && !check_isOperator(client))
 		return ;
 	_topicVal = topic;
 }
@@ -90,7 +97,7 @@ void Channel::changeTopic(Client &client, std::string topic)
 bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &out)
 {
 	if (cur == args.size())
-		return (_server.err_NEEDMOREPARAMS(client, "MODE"), false); 
+		return (_server->err_NEEDMOREPARAMS(client, "MODE"), false); 
 	out = args[cur];
 	cur++;
 	return true;
@@ -103,12 +110,12 @@ void Channel::toggleOp(Client &client, std::string name, bool on)
 	{
 		if (it->first->get(Name_Nick) == name)
 		{
-			it->second = on ? Status_Op: Status_Connected;
+			it->second = on ? Status_Op : Status_Connected;
 			return ;
 		}
 		it++;
 	}
-	return _server.err_NOTONCHANNEL(client, _name);
+	return _server->err_NOTONCHANNEL(client, _name);
 }
 
 void Channel::updateMode(char c, bool adding)
@@ -117,7 +124,7 @@ void Channel::updateMode(char c, bool adding)
 	if (adding)
 	{
 		if (pos == std::string::npos)
-			_mode.append(&c);
+			_mode += c;
 	}
 	else if (pos != std::string::npos)
 		_mode.erase(pos, 1);
@@ -169,7 +176,7 @@ void Channel::changeMode(Client &client, Args args)
 				updateMode(args[1][i], adding);
 				break;
 			default:
-				_server.err_UNKNOWNMODE(client, args[1][i]);
+				_server->err_UNKNOWNMODE(client, args[1][i]);
 				break;
 
 		}
@@ -177,15 +184,15 @@ void Channel::changeMode(Client &client, Args args)
 }
 
 
-void Channel::broadcastMessage(Client &client, std::string message)
+void Channel::broadcastMessage(Client &client, std::string cmd, std::string message, bool sendSender)
 {
 	if (getClientStatus(client) == Status_None)
-		return _server.err_CANNOTSENDTOCHAN(client, _name);
+		return _server->err_CANNOTSENDTOCHAN(client, _name);
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		if (client != *(it->first))
-			_server.clientToClient(*it->first, client, "PRIVMSG " + _name + " " + message);
+		if (sendSender || client != *(it->first))
+			_server->clientToClient(*it->first, client, cmd + " " + _name + " " + message);
 		it++;
 	}
 }

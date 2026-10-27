@@ -1,7 +1,7 @@
 NAME := channel.a
 
 SRC :=	Channel_check.cpp		\
-		Channel_cmd.cpp		\
+		Channel_base.cpp		\
 
 CC=c++
 
