@@ -27,7 +27,7 @@ class Channel
 		std::string getModes(Client &client);
 		void joinClient(Client &client, std::string password);
 		void kickClient(Client &op, Client &user, std::string reason);
-		void partClient(Client &client);
+		void partClient(Client &client, std::string reason);
 		void changeTopic(Client &client, std::string topic);
 		void getTopic(Client &client);
 		void changeMode(Client &client, Args args);

@@ -39,6 +39,7 @@ ClientChannelStatus Channel::getClientStatus( Client &client)
 void Channel::joinClient(Client &client, std::string password)
 {
 	_clientPassword = password;
+	std::cout << "		"<< password << "\n";
 	Check checks[] = {	&Channel::openToEnter, 
 						&Channel::check_fullChannel, 
 						&Channel::check_key, NULL};
@@ -50,10 +51,13 @@ void Channel::joinClient(Client &client, std::string password)
 	broadcastMessage(client, "PRIVMSG", "JOIN " + _name, false);
 }
 
-void Channel::partClient(Client &client)
+void Channel::partClient(Client &client, std::string reason)
 {
 	if (!check_isOnChannel(client))
 		return ;
+	if(reason != "")
+		reason.insert(0, " :");
+	broadcastMessage(client, "PART", _name + reason, true);
 	_clients.erase(&client);
 	if (_clients.size() == 0)
 		_server->removeChannel(*this);
@@ -151,10 +155,7 @@ void Channel::changeMode(Client &client, Args args)
 				updateMode(args[1][i], adding);
 				break;
 			case 't':
-				if (adding)
-					consumeArg(client, args, curParam, _topicVal);
-				else
-					_topicVal = "";
+				_topicLocked = adding;
 				updateMode(args[1][i], adding);
 				break;
 			case 'k':

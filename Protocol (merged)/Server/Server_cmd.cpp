@@ -83,10 +83,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 	for (size_t i = 0; i < _channels.size(); i++)
 	{
 		if (_channels[i].getClientStatus(client) != Status_None)
-		{
-			_channels[i].broadcastMessage(client, "QUIT",reason, false);
-			_channels[i].partClient(client);
-		}
+			_channels[i].partClient(client, reason);
 	}
 	//close connection
 }
@@ -106,8 +103,9 @@ void Server::cmd_JOIN(Client &client, Args args)
 	while (channelIdx != std::string::npos)
 	{
 		std::string name = nextChar(args[0], channelIdx, ',');
-		std::string password = nextChar(args[0], keyIdx, ',');
-
+		std::string password = "";
+		if (args.size() > 1)
+			password = nextChar(args[1], keyIdx, ',');
 		if (!parseChannel(name))
 			err_NOSUCHCHANNEL(client, name);
 		else
@@ -131,10 +129,10 @@ void Server::cmd_PART(Client &client, Args args)
 	{
 		std::string name = nextChar(args[0], channelIdx, ',');
 		Channel *channel = nullptr;
-		if (getChannel(client, name, &channel))
+		if (!getChannel(client, name, &channel))
 			return ;
 		else
-			channel->partClient(client);
+			channel->partClient(client, args.size() < 2 ? "" : args[1]);
 	}
 }
 
