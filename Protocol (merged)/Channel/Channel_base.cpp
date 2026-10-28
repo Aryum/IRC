@@ -119,7 +119,6 @@ void Channel::toggleOp(Client &client, std::string name, bool on)
 		}
 		it++;
 	}
-	return _server->err_NOTONCHANNEL(client, _name);
 }
 
 void Channel::updateMode(char c, bool adding)
