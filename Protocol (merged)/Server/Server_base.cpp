@@ -16,6 +16,9 @@ Server::Server(int port, const std::string& password) :
 	_cmd["MODE"] = &Server::cmd_MODE;
 	_cmd["PART"] = &Server::cmd_PART;
 	_cmd["PRIVMSG"] = &Server::cmd_PRIVMSG;
+	_cmd["WHO"] = &Server::cmd_WHO;
+	
+
 	time_t t = time(NULL);
 	_date = ctime(&t);
 	_date.erase(_date.size() - 1);

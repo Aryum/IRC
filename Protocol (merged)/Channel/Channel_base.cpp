@@ -107,7 +107,7 @@ bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &o
 	return true;
 }
 
-void Channel::toggleOp(Client &client, std::string name, bool on)
+void Channel::toggleOp(std::string name, bool on)
 {
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
@@ -166,7 +166,7 @@ void Channel::changeMode(Client &client, Args args)
 				break;
 			case 'o':
 				if (consumeArg(client, args, curParam, var))
-					toggleOp(client, var, adding);
+					toggleOp(var, adding);
 				break;
 			case 'l':
 				if (adding && consumeArg(client, args, curParam, var))
@@ -224,4 +224,14 @@ std::string Channel::getModes(Client &client)
 		}
 	}
 	return ret;
+}
+
+void Channel::who(Client &client)
+{
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	while (it != _clients.end())
+	{
+		_server->rpl_WHOREPLY(client, this, *it->first);
+		it++;
+	}
 }

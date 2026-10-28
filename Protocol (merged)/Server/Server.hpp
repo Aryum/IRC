@@ -50,6 +50,8 @@ class Server
 		void rpl_INVITING(Client &client, std::string invited,std::string channel);
 		void rpl_NOTOPIC(Client &client, std::string channel);
 		void rpl_TOPIC(Client &client, std::string channel,std::string topic);
+		void rpl_WHOREPLY(Client &client, Channel *channel, Client &user);
+		void rpl_ENDOFWHO(Client &client, std::string query);
 
 	private:
 		int _port;
@@ -73,6 +75,7 @@ class Server
 		void cmd_TOPIC(Client &client, Args args);
 		void cmd_MODE(Client &client, Args args);
 		void cmd_PRIVMSG(Client &client, Args args);
+		void cmd_WHO(Client &client, Args args);
 
 		
 		void sendToClient(Client &client, const std::string& sender, const std::string& message);
@@ -83,6 +86,8 @@ class Server
 		bool getClient(Client &client, std::string name, Client **out);
 		bool getChannel(Client &client, std::string name, Channel **out);
 		Channel *getChannel(std::string name);
+		Client *getClient(std::string name);
+
 };
 
 //move to its own helper file, it contains all the system headers as well

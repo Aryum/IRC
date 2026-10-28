@@ -9,7 +9,8 @@ enum NameType
 	Name_User,
 	Name_Nick, 
 	Name_Host,
-	Name_Full
+	Name_Full,
+	Name_Real
 };
 
 class Client 
@@ -49,6 +50,7 @@ class Client
 		std::string _nickName;
 		std::string _hostName;
 		std::string _fullName;
+		std::string _realName;
 		int _socket;
 		bool _correctPassword;
 		bool _namesSet;

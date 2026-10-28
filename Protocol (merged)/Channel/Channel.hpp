@@ -30,6 +30,7 @@ class Channel
 		void partClient(Client &client, std::string reason);
 		void changeTopic(Client &client, std::string topic);
 		void getTopic(Client &client);
+		void who(Client &client);
 		void changeMode(Client &client, Args args);
 		void inviteClient(Client &op, Client &user);
 		void broadcastMessage(Client &client, std::string cmd, std::string message, bool sendSender);
@@ -49,7 +50,7 @@ class Channel
 		
 		void updateMode(char c, bool adding);
 		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
-		void toggleOp(Client &client, std::string name, bool on);
+		void toggleOp(std::string name, bool on);
 		bool check_isOnChannel(Client &c);
 		bool check_isOperator(Client &c);
 		bool check_fullChannel(Client &c);

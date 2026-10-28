@@ -49,20 +49,23 @@ bool Server::getChannel(Client &client, std::string name, Channel **out)
 }
 //if we change to throw system, this should throw a reply nosuch user or wtv
 
-bool Server::getClient(Client &client, std::string name, Client **out)
+Client *Server::getClient(std::string name)
 {
 	ClientMap::iterator it = _clients.begin();
 
 	while (it != _clients.end())
 	{
 		if (it->second->get(Name_Nick) == name)
-		{
-			*out = it->second;
-			return true;
-		}
+			return it->second;
 		it++;
 	}
-	err_NOSUCHNICK(client, name);
-	return false;
+	return nullptr;
+}
+bool Server::getClient(Client &client, std::string name, Client **out)
+{
+	*out = getClient(name);
+	if (*out == nullptr)
+		err_NOSUCHNICK(client, name);
+	return (*out != nullptr);
 }
 

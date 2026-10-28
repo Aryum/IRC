@@ -31,3 +31,27 @@ void Server::rpl_CHANNELMODEIS(Client &client, Channel &channel)
 {
 	serverToClient(client, "324 " + client.get(Name_Nick) + " " + channel.getName() + " +" + channel.getModes(client));
 }
+
+
+
+void Server::rpl_WHOREPLY(Client &client, Channel *channel, Client &user)
+{
+	std::string channelName = "*";
+	std::string channelStatus = "H";
+	if (channel != nullptr)
+	{
+		channelName = channel->getName();
+		channelStatus += ((channel->getClientStatus(user) == Status_Op) ? "@" : "");
+	}
+	serverToClient(client, "352 " + client.get(Name_Nick) + " " + channelName + " " + \
+					user.get(Name_User) + " " + user.get(Name_Host) + " IRC " + user.get(Name_Nick) + " " + \
+					channelStatus + " " + \
+					":0 " + user.get(Name_Real));
+}
+
+void Server::rpl_ENDOFWHO(Client &client, std::string query)
+{
+
+	serverToClient(client, "315 " + client.get(Name_Nick) + " " + query + " :End of WHO list");
+
+}

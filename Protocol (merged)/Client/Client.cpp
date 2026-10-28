@@ -4,6 +4,8 @@ Client::Client(int socket) :
 		_userName(),
 		_nickName("*"),
 		_hostName(),
+		_fullName(),
+		_realName(),
 		_socket(socket),
 		_correctPassword(false),
 		_namesSet(false),
@@ -41,12 +43,12 @@ void Client::changeNick(std::string nick)
 	_nickName = nick;
 }
 
-void Client::setNames(std::string user, std::string host, std::string nick)
+void Client::setNames(std::string user, std::string host, std::string real)
 {
 	_hostName = host;
-	_nickName = nick;
+	_realName = real;
 	_userName = user;
-	_fullName = nick + "!" + user + "@" + host;
+	_fullName = _nickName + "!" + user + "@" + host;
 	_namesSet = true;
 }
 
@@ -72,6 +74,8 @@ std::string Client::get(NameType type) const
 			return _userName;
 		case Name_Full:
 			return _fullName;
+		case Name_Real:
+			return _realName;
 		default:
 			return "";
 	}

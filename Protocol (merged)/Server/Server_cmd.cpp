@@ -221,3 +221,28 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 			clientToClient(*tarClient, client, "PRIVMSG " + client.get(Name_Nick) + " " + args[1]);
 	}
 }
+
+
+void Server::cmd_WHO(Client &client, Args args)
+{
+	if (args.size() == 0)
+	{
+		ClientMap::iterator it = _clients.begin();
+		while (it != _clients.end())
+		{
+			rpl_WHOREPLY(client, nullptr, *it->second);
+			it++;
+		}
+		return rpl_ENDOFWHO(client, "*");
+	}
+	Channel *tarChannel = getChannel(args[0]);
+	if (tarChannel != nullptr)
+		return tarChannel->who(client);
+	else
+	{
+		Client *tarClient = getClient(args[0]);
+		if (tarClient != nullptr)
+			rpl_WHOREPLY(client, nullptr, *tarClient);
+	}
+	rpl_ENDOFWHO(client, args[0]);
+}
