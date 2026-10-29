@@ -30,8 +30,8 @@ class Client
 		bool operator!=(Client &other) const;
 
 		int getSocket();
-		void changeNick(std::string nick);
-		void setNames(std::string user, std::string host, std::string nick);
+		void cmd_Nick(std::string nick);
+		void cmd_USER(std::string user, std::string host, std::string nick);
 		void sendReply(std::string reply) const;
 		void setPasswordVerified();
 		bool isRegistred();

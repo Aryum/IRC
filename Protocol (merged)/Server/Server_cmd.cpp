@@ -44,7 +44,7 @@ void Server::cmd_NICK(Client &client, Args args)
 			return err_NICKNAMEINUSE(client, args[0]);
 		it++;
 	}
-	client.changeNick(args[0]);
+	client.cmd_Nick(args[0]);
 	if (client.isRegistred() && !client.isWelcome())
 	{
 		_clients.insert(std::make_pair(client.getSocket(), &client));
@@ -65,7 +65,7 @@ void Server::cmd_USER(Client &client, Args args)
 	for (size_t i = 0; i < args.size(); i++)
 		std::cout << MAGENTA << args[i] << WHITE<< "\n";
 	
-	client.setNames(args[0], args[1], args[3]);
+	client.cmd_USER(args[0], args[1], args[3]);
 	if (client.isRegistred() && !client.isWelcome())
 		rpl_WELCOME(client, _date);
 }

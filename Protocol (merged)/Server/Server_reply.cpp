@@ -21,7 +21,7 @@ void Server::rpl_WELCOME(Client &client, std::string date)
 	std::string nick = client.get(Name_Nick);
 	
 	client.setWelcome();
-	serverToClient(client, "001 " + nick + " :Welcome to the Internet Relay Network!" + client.get(Name_Full));
+	serverToClient(client, "001 " + nick + " :Welcome to the Internet Relay Network! " + client.get(Name_Full));
 	serverToClient(client, "002 " + nick + " :Your host is IRC, running version 1.0");
 	serverToClient(client, "003 " + nick + " :This server was created " + date);
 	serverToClient(client, "004 " + nick + " IRC 1.0 o itkol");

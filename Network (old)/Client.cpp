@@ -83,12 +83,12 @@ int Client::getSocket()
 	return _socket;
 }
 
-void Client::changeNick(std::string nick)
+void Client::cmd_Nick(std::string nick)
 {
 	_nickName = nick;
 }
 
-void Client::setNames(std::string user, std::string host, std::string nick)
+void Client::cmd_USER(std::string user, std::string host, std::string nick)
 {
 	_hostName = host;
 	_nickName = nick;

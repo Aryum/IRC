@@ -8,7 +8,8 @@ Client::Client(int socket) :
 		_realName(),
 		_socket(socket),
 		_correctPassword(false),
-		_namesSet(false),
+		_userSet(false),
+		_nickSet(false),
 		_isWelcome(false),
 		_curChannel(nullptr)
 {}
@@ -35,21 +36,22 @@ bool Client::isWelcome()
 
 void Client::setWelcome()
 {
+	_fullName = _nickName + "!" + _userName + "@" + _hostName;
 	_isWelcome = true;
 }
 
-void Client::changeNick(std::string nick)
+void Client::cmd_Nick(std::string nick)
 {
 	_nickName = nick;
+	_nickSet = true;
 }
 
-void Client::setNames(std::string user, std::string host, std::string real)
+void Client::cmd_USER(std::string user, std::string host, std::string real)
 {
 	_hostName = host;
 	_realName = real;
 	_userName = user;
-	_fullName = _nickName + "!" + user + "@" + host;
-	_namesSet = true;
+	_userSet = true;
 }
 
 
@@ -60,7 +62,7 @@ void Client::setPasswordVerified()
 
 bool Client::isRegistred()
 {
-	return (_namesSet && _correctPassword);
+	return (_userSet && _correctPassword && _nickSet);
 }
 std::string Client::get(NameType type) const
 {
