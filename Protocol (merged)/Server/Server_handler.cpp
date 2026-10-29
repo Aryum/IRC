@@ -202,7 +202,7 @@ void Server::receiveData(int index)
         if(bytesReceived == 0)
         {
             removeData(index);
-            continue; //remove later maybe
+            return ; 
         }
 
         if(errno == EINTR)
