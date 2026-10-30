@@ -9,6 +9,7 @@ Channel::Channel(Server* server, Client &client, std::string &name) :
 	_mode(),
 	_clients(),
 	_inviteOnly(false),
+	_topicLocked(false),
 	_clientLimit(-1)
 {
 	_clients.insert(std::make_pair(&client, Status_Op));
@@ -106,18 +107,19 @@ bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &o
 	return true;
 }
 
-void Channel::toggleOp(std::string name, bool on)
+void Channel::toggleOp(Client &client, std::string tarName, bool on)
 {
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		if (it->first->get(Name_Nick) == name)
+		if (it->first->get(Name_Nick) == tarName)
 		{
 			it->second = on ? Status_Op : Status_Connected;
 			return ;
 		}
 		it++;
 	}
+	_server->err_USERNOTINCHANNEL(client, tarName, _name);
 }
 
 void Channel::updateMode(char c, bool adding)
@@ -165,7 +167,7 @@ void Channel::changeMode(Client &client, Args args)
 				break;
 			case 'o':
 				if (consumeArg(client, args, curParam, var))
-					toggleOp(var, adding);
+					toggleOp(client, var, adding);
 				break;
 			case 'l':
 				if (adding && consumeArg(client, args, curParam, var))

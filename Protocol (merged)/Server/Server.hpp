@@ -27,6 +27,7 @@ class Server
 
         void sendData(int index);
 
+		void err_USERNOTINCHANNEL(Client &client, std::string user, std::string channel);
 		void err_PASSWDMISMATCH(Client &client);
 		void err_UNKNOWNCOMMAND(Client &client, std::string cmd);
 		void err_ALREADYREGISTRED(Client &client);

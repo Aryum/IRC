@@ -92,3 +92,8 @@ void Server::err_NOTEXTTOSEND(Client &client)
 {
 	serverToClient(client , "412 " + client.get(Name_Nick) + " :No text to send");
 }
+
+void Server::err_USERNOTINCHANNEL(Client &client, std::string user, std::string channel)
+{
+	serverToClient(client , "441 " + user + " " + channel + " :They aren't on that channel");
+}

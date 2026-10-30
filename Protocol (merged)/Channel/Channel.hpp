@@ -50,7 +50,7 @@ class Channel
 		
 		void updateMode(char c, bool adding);
 		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
-		void toggleOp(std::string name, bool on);
+		void toggleOp(Client &client, std::string tarName, bool on);
 		bool check_isOnChannel(Client &c);
 		bool check_isOperator(Client &c);
 		bool check_fullChannel(Client &c);

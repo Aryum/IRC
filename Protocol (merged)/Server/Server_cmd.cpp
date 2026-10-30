@@ -70,8 +70,6 @@ void Server::cmd_USER(Client &client, Args args)
 		rpl_WELCOME(client, _date);
 }
 
-
-
 void Server::cmd_QUIT(Client &client, Args args)
 {
 	_clients.erase(client.getSocket());

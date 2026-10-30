@@ -46,18 +46,13 @@ void Server::call_cmd(Client &client, std::string input)
 	{
 		i++;
 		std::string token = nextChar(input, spaceIdx, ' ', prefix);
-		std::cout << BLUE << "Found " << token << "\n" << WHITE;
 		if (i == 1 && token[0] == '@')
-		{
-			std::cout << "ignoring tag\n";
 			continue;
-		}
 
 		if (token[0] ==  ':' && spaceIdx != std::string::npos)
 		{
 			if (!prefix)
 			{
-				std::cout << "ignoring source\n";
 				prefix = true;
 				continue;
 			}
@@ -68,10 +63,6 @@ void Server::call_cmd(Client &client, std::string input)
 		else if (!token.empty())
 			params.push_back(token);
 	}
-	std::cout << "Command " << command << "\n";
-	std::cout << "Param BEFORE" << "\n";
-	for (size_t h = 0; h < params.size(); h++)
-		std::cout << "	" << params[h] << "\n";
 	CmdMap::iterator it = _cmd.find(command);
 	if (it == _cmd.end())
 		return err_UNKNOWNCOMMAND(client, command);
@@ -79,10 +70,6 @@ void Server::call_cmd(Client &client, std::string input)
 	{
 		if (command != "PRIVMSG" && params[params.size() - 1][0] == ':')
 			params[params.size() - 1].erase(0, 1);
-		std::cout << "Param AFTER" << "\n";
-		for (size_t h = 0; h < params.size(); h++)
-			std::cout << "	" << params[h] << "\n";
 	}
-	
 	(this->*(it->second))(client, params);
 }
