@@ -253,10 +253,7 @@ void Server::clientToClient(Client& target, Client& sender, const std::string& m
 
 void Server::sendToClient(Client &client, const std::string& sender, const std::string& message)
 {
-
-	std::cout << YELLOW << "	Sending to " << client.get(Name_Full) << "FD=" << client.getSocket() << ": " << sender + " " + message << WHITE << std::endl;
     client.appendOutput(sender + " " + message + "\r\n");
-
     for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)
     {
         if (_pollFds[i].fd == client.getSocket())

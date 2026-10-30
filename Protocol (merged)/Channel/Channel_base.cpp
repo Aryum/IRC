@@ -34,9 +34,6 @@ ClientChannelStatus Channel::getClientStatus( Client &client)
 	return Status_None;
 }
 
-
-
-//maybbe just return an int that will be read by the map reply
 void Channel::joinClient(Client &client, std::string password)
 {
 	_clientPassword = password;
@@ -81,7 +78,6 @@ void Channel::inviteClient(Client &op, Client &user)
 	_server->rpl_INVITING(op, user.get(Name_Nick), _name);
 	_server->clientToClient(user, op, "INVITE " + user.get(Name_Nick) + " :" + _name);
 }
-
 
 void Channel::getTopic(Client &client)
 {
@@ -183,7 +179,6 @@ void Channel::changeMode(Client &client, Args args)
 		}
 	}
 }
-
 
 void Channel::broadcastMessage(Client &client, std::string cmd, std::string message, bool sendSender)
 {

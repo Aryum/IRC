@@ -1,11 +1,10 @@
 #include "Server.hpp"
 
-//args-> channel topic
 void Server::rpl_NOTOPIC(Client &client, std::string channel)
 {
 	serverToClient(client, "331 " + client.get(Name_Nick) + " " +  channel + " :No topic is set");
 }
-//args-> channel + topic
+
 void Server::rpl_TOPIC(Client &client, std::string channel,std::string topic)
 {
 	serverToClient(client, "332 " + client.get(Name_Nick) + " " + channel + " :" + topic);
@@ -32,8 +31,6 @@ void Server::rpl_CHANNELMODEIS(Client &client, Channel &channel)
 	serverToClient(client, "324 " + client.get(Name_Nick) + " " + channel.getName() + " +" + channel.getModes(client));
 }
 
-
-
 void Server::rpl_WHOREPLY(Client &client, Channel *channel, Client &user)
 {
 	std::string channelName = "*";
@@ -51,7 +48,5 @@ void Server::rpl_WHOREPLY(Client &client, Channel *channel, Client &user)
 
 void Server::rpl_ENDOFWHO(Client &client, std::string query)
 {
-
 	serverToClient(client, "315 " + client.get(Name_Nick) + " " + query + " :End of WHO list");
-
 }

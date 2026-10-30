@@ -8,13 +8,12 @@ void Server::err_UNKNOWNCOMMAND(Client &client, std::string cmd)
 {
 	serverToClient(client , "421 " + client.get(Name_Nick) + " " + cmd + " :Unknown command");
 }
-//args-> empty
+
 void Server::err_ALREADYREGISTRED(Client &client)
 {
 	serverToClient(client , "462 "+ client.get(Name_Nick) + " :You may not reregister");
 }
 
-//args-> cmd name
 void Server::err_NEEDMOREPARAMS(Client &client, std::string cmd)
 {
 	serverToClient(client , "461 " + client.get(Name_Nick) + " " + cmd + " :Not enough parameters");

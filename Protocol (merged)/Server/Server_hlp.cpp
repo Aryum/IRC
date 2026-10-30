@@ -1,6 +1,5 @@
 #include "Server.hpp"
 
-//move to a helper file probably need to make it return if it has a key or not, if it idx was already npos
 std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 {
 	size_t curIdx;
@@ -26,7 +25,7 @@ std::string nextChar(const std::string &input, size_t &idx, char c)
 {
 	return nextChar(input, idx, c, true);
 }
-//already sends message if doesnt find
+
 Channel *Server::getChannel(std::string name)
 {
 	std::vector<Channel>::iterator it = _channels.begin();
@@ -39,7 +38,7 @@ Channel *Server::getChannel(std::string name)
 	}
 	return nullptr;
 }
-//already sends message if doesnt find
+
 bool Server::getChannel(Client &client, std::string name, Channel **out)
 {
 	*out = getChannel(name);
@@ -47,7 +46,6 @@ bool Server::getChannel(Client &client, std::string name, Channel **out)
 		err_NOSUCHCHANNEL(client, name);
 	return (*out != nullptr);
 }
-//if we change to throw system, this should throw a reply nosuch user or wtv
 
 Client *Server::getClient(std::string name)
 {
@@ -61,6 +59,7 @@ Client *Server::getClient(std::string name)
 	}
 	return nullptr;
 }
+
 bool Server::getClient(Client &client, std::string name, Client **out)
 {
 	*out = getClient(name);

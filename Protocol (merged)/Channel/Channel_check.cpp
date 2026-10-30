@@ -21,6 +21,7 @@ std::string  Channel::getName()
 {
 	return _name;
 }
+
 bool Channel::check_isOperator(Client &c)
 {
 	ClientChannelStatus status = getClientStatus(c);
@@ -34,6 +35,7 @@ bool Channel::check_isOperator(Client &c)
 			return true;
 	}
 }
+
 bool Channel::check_fullChannel(Client &c)
 {
 	if (_clientLimit == _clients.size())
