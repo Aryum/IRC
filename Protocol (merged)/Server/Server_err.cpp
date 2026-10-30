@@ -96,3 +96,8 @@ void Server::err_USERNOTINCHANNEL(Client &client, std::string user, std::string 
 {
 	serverToClient(client , "441 " + user + " " + channel + " :They aren't on that channel");
 }
+
+void Server::err_USERONCHANNEL(Client &client, Client &tar, std::string channel)
+{
+	serverToClient(client , "443 " + tar.get(Name_Nick) + " " + channel + " :is already on channel");
+}

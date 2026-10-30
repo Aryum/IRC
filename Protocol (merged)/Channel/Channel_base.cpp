@@ -42,7 +42,10 @@ void Channel::joinClient(Client &client, std::string password)
 						&Channel::check_key, NULL};
 	if (!checkMultiple(client, checks))
 		return ;
+	size_t size = _clients.size();
 	_clients.insert(std::make_pair(&client, Status_Connected));
+	if (size == _clients.size())
+		return ;
 	getTopic(client);
 	_server->clientToClient(client, client, "JOIN " + _name);
 	broadcastMessage(client, "PRIVMSG", "JOIN " + _name, false);
@@ -72,7 +75,7 @@ void Channel::inviteClient(Client &op, Client &user)
 {
 	Check checks[] = {	&Channel::check_canInvite, 
 						&Channel::check_fullChannel, NULL};
-	if (!checkMultiple(op, checks))
+	if (!checkMultiple(op, checks) || alreadyOnChannel(op, user))
 		return ;
 	_clients.insert(std::make_pair(&user, Status_Invited));
 	_server->rpl_INVITING(op, user.get(Name_Nick), _name);

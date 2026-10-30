@@ -66,3 +66,11 @@ bool Channel::openToEnter(Client &c)
 		return (_server->err_INVITEONLYCHAN(c, _name), false);
 	return true;
 }
+
+bool Channel::alreadyOnChannel(Client &c, Client &tar)
+{
+	ClientChannelStatus status = getClientStatus(tar);
+	if (status == Status_Op || status == Status_Connected)
+		return (_server->err_USERONCHANNEL(c, tar, _name), false);
+	return true;
+}

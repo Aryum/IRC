@@ -57,5 +57,7 @@ class Channel
 		bool check_canInvite(Client &c);
 		bool check_key(Client &c);
 		bool checkMultiple(Client &c, Check *checks);
+		bool alreadyOnChannel(Client &c, Client &tar);
+
 };
 #endif

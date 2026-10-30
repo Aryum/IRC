@@ -46,6 +46,7 @@ class Server
 		void err_NORECIPIENT(Client &client);
 		void err_NOTEXTTOSEND(Client &client);
 		void err_ERRONEUSNICKNAME(Client &client, std::string channel);
+		void err_USERONCHANNEL(Client &client, Client &tar, std::string channel);
 		void rpl_WELCOME(Client &client, std::string date);
 		void rpl_CHANNELMODEIS(Client &client, Channel &channel);
 		void rpl_INVITING(Client &client, std::string invited,std::string channel);
