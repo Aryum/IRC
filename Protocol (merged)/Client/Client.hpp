@@ -23,12 +23,15 @@ class Client
 		bool operator!=(const Client &other) const;
 
 		int getSocket();
-		void cmd_Nick(std::string nick);
+		void cmd_NICK(std::string nick);
 		void cmd_USER(std::string user, std::string host, std::string nick);
 		void setPasswordVerified();
 		void setWelcome();
+		void setQuiting();
 		bool isRegistred();
 		bool isWelcome();
+		bool isQuiting();
+
 
 		std::string get(NameType type) const;
 
@@ -56,6 +59,8 @@ class Client
 		bool _userSet;
 		bool _nickSet;
 		bool _isWelcome;
+		bool _isQuiting;
+
 		Channel *_curChannel;
         std::string inputBuffer;
         std::string outputBuffer;

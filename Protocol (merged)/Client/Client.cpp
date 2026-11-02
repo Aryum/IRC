@@ -11,6 +11,7 @@ Client::Client(int socket) :
 		_userSet(false),
 		_nickSet(false),
 		_isWelcome(false),
+		_isQuiting(false),
 		_curChannel(nullptr)
 {}
 Client::~Client()
@@ -40,7 +41,17 @@ void Client::setWelcome()
 	_isWelcome = true;
 }
 
-void Client::cmd_Nick(std::string nick)
+bool Client::isQuiting()
+{
+	return _isQuiting;
+}
+
+void Client::setQuiting()
+{
+	_isQuiting = true;
+}
+
+void Client::cmd_NICK(std::string nick)
 {
 	_nickName = nick;
 	_nickSet = true;

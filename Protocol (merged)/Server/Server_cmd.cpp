@@ -5,9 +5,9 @@ void Server::cmd_PASS(Client &client, Args args)
 	if (client.isRegistred())
 		return err_ALREADYREGISTRED(client);
 	else if (args.size() == 0)
-		return err_NEEDMOREPARAMS(client, "PASS");
+		return (err_NEEDMOREPARAMS(client, "PASS"), client.setQuiting());
 	if (args[0] != _password)
-		return err_PASSWDMISMATCH(client);
+		return (err_PASSWDMISMATCH(client), client.setQuiting());
 	client.setPasswordVerified();
 	if (client.isRegistred())
 		rpl_WELCOME(client, _date);
@@ -44,7 +44,7 @@ void Server::cmd_NICK(Client &client, Args args)
 			return err_NICKNAMEINUSE(client, args[0]);
 		it++;
 	}
-	client.cmd_Nick(args[0]);
+	client.cmd_NICK(args[0]);
 	if (client.isRegistred() && !client.isWelcome())
 	{
 		_clients.insert(std::make_pair(client.getSocket(), &client));
@@ -72,7 +72,6 @@ void Server::cmd_USER(Client &client, Args args)
 
 void Server::cmd_QUIT(Client &client, Args args)
 {
-	_clients.erase(client.getSocket());
 	std::string reason;
 	if (args.size() != 0)
 		reason = args[0];
@@ -83,7 +82,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 		if (_channels[i].getClientStatus(client) != Status_None)
 			_channels[i].partClient(client, reason);
 	}
-	//close connection
+	client.setQuiting();
 }
 
 static bool parseChannel(std::string name)

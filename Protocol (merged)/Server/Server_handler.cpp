@@ -114,7 +114,7 @@ void Server::run()
             throw std::runtime_error("poll failed");
         }
         
-        int i = static_cast<int>(_pollFds.size()) - 1;
+        size_t i = _pollFds.size() - 1;
 
         while (i >= 1)
         {
@@ -131,9 +131,9 @@ void Server::run()
             if (events & POLLIN)
             {
                 receiveData(i);
-
+				//static_cast<std::vector<pollfd>::size_type>()
         // receiveData may have removed this client.
-                if (static_cast<std::vector<pollfd>::size_type>(i) >= _pollFds.size() || _pollFds[i].fd != clientFd)
+                if (i >= _pollFds.size() || _pollFds[i].fd != clientFd)
                 {
                     --i;
                     continue;
@@ -155,7 +155,7 @@ void Server::receiveData(int index)
 {
     char buffer[512];
     int clientFd = _pollFds[index].fd;
-
+	Client *client = _clients[clientFd];
     while(true)
     {
         ssize_t bytesReceived = recv(_pollFds[index].fd, buffer, sizeof(buffer), 0);
@@ -163,6 +163,7 @@ void Server::receiveData(int index)
 
         if(bytesReceived > 0)
         {
+			/*
             std::map<int, Client*>::iterator it = _clients.find(clientFd);
 
             if (it == _clients.end())
@@ -170,9 +171,9 @@ void Server::receiveData(int index)
                 removeData(index);
                 return;
             }
-
+			*/
             std::string data(buffer, bytesReceived);
-            it->second->appendInput(data);
+            client->appendInput(data);
 
             std::cout << "Buffer contents: [";
 
@@ -189,13 +190,14 @@ void Server::receiveData(int index)
 
             std::cout << "]" << std::endl;
 
-            while (it->second->hasCompleteLine())
+            while (client->hasCompleteLine())
             {
-                std::string line = it->second->extractLine();
+                std::string line = client->extractLine();
                 std::cout << "IRC message from fd=" << clientFd << ": " << line << std::endl;
-				call_cmd(*it->second,line );
+				call_cmd(*client, line);
 			}
-
+			if (client->isQuiting())
+				return removeData(index);
             continue;
         }
 
