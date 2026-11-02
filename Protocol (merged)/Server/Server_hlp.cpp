@@ -68,3 +68,11 @@ bool Server::getClient(Client &client, std::string name, Client **out)
 	return (*out != nullptr);
 }
 
+void Server::removeClientChannels(Client &client)
+{
+	for (size_t i = 0; i < _channels.size(); i++)
+	{
+		if (_channels[i].getClientStatus(client) != Status_None)
+			_channels[i].removeClient(client);
+	}
+}

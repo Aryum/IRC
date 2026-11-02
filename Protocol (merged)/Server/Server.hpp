@@ -20,6 +20,7 @@ class Server
         void receiveData(int index);
         void removeData(int index);
         void removeChannel(Channel &channel);
+		void removeClientChannels(Client &client);
 
 
 		void serverToClient(Client& target, const std::string& message);

@@ -30,6 +30,7 @@ class Channel
 		void partClient(Client &client, std::string reason);
 		void changeTopic(Client &client, std::string topic);
 		void getTopic(Client &client);
+		void removeClient(Client &client);
 		void who(Client &client);
 		void changeMode(Client &client, Args args);
 		void inviteClient(Client &op, Client &user);

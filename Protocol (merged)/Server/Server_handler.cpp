@@ -224,7 +224,7 @@ void Server::removeChannel(Channel &channel)
 	if (it != _channels.end())
 		_channels.erase(it);
 }
-
+//maybe pass client fd as param and a ptr to client, it its nullptr it atcts like it didnt find
 void Server::removeData(int index)
 {
     int clientFd = _pollFds[index].fd;
@@ -233,6 +233,7 @@ void Server::removeData(int index)
 
     if (it != _clients.end())
     {
+		removeClientChannels(*it->second);
         delete it->second;
         _clients.erase(it);
     }

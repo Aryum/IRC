@@ -51,6 +51,12 @@ void Channel::joinClient(Client &client, std::string password)
 	broadcastMessage(client, "PRIVMSG", "JOIN " + _name, false);
 }
 
+void Channel::removeClient(Client &client)
+{
+	_clients.erase(&client);
+	if (_clients.size() == 0)
+		_server->removeChannel(*this);
+}
 void Channel::partClient(Client &client, std::string reason)
 {
 	if (!check_isOnChannel(client))
@@ -58,9 +64,7 @@ void Channel::partClient(Client &client, std::string reason)
 	if(reason != "")
 		reason.insert(0, " :");
 	broadcastMessage(client, "PART", _name + reason, true);
-	_clients.erase(&client);
-	if (_clients.size() == 0)
-		_server->removeChannel(*this);
+	removeClient(client);
 }
 
 void Channel::kickClient(Client &op, Client &user, std::string reason)
