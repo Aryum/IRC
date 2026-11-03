@@ -51,6 +51,7 @@ void Server::cmd_NICK(Client &client, Args args)
 		rpl_WELCOME(client, _date);
 	}
 }
+
 void Server::cmd_USER(Client &client, Args args)
 {
 	if (args.size() < 4)

@@ -39,7 +39,7 @@ void Server::call_cmd(Client &client, std::string input)
 {
 	size_t spaceIdx = 0;
 	std::string command = "";
-	std::vector<std::string> params;
+	std::vector<std::string> params = std::vector<std::string>();
 	int i = 0;
 	bool prefix = false;
 	while (spaceIdx != std::string::npos)
