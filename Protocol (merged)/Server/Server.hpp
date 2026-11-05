@@ -21,6 +21,7 @@ class Server
         void removeData(int index);
         void removeChannel(Channel &channel);
 		void removeClientChannels(Client &client);
+		void shutdownServer();
 
 
 		void serverToClient(Client& target, const std::string& message);
@@ -57,6 +58,7 @@ class Server
 		void rpl_ENDOFWHO(Client &client, std::string query);
 
 	private:
+		static bool _shutDownSignal;
 		int _port;
         int _serverFd;
         std::string _password;
@@ -82,7 +84,8 @@ class Server
 
 		
 		void sendToClient(Client &client, const std::string& sender, const std::string& message);
-	
+		static void set_shutDown(int signal);
+
 
 		
 		//move to its own helper file, it contains all the system headers as well

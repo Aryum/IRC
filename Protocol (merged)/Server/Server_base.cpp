@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+bool Server::_shutDownSignal = false;
+
 Server::Server(int port, const std::string& password) :
 	_port(port), 
 	_serverFd(-1), 
@@ -72,4 +74,10 @@ void Server::call_cmd(Client &client, std::string input)
 			params[params.size() - 1].erase(0, 1);
 	}
 	(this->*(it->second))(client, params);
+}
+
+void Server::set_shutDown(int signal)
+{
+	(void)signal;
+	_shutDownSignal = true;
 }

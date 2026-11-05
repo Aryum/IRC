@@ -26,6 +26,7 @@
 #include <cerrno>
 #include <arpa/inet.h>
 #include <stdexcept>
+#include <csignal>
 
 
 #define RED "\033[31m"

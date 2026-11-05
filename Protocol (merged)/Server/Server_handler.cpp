@@ -34,6 +34,8 @@ void Server::setupSocket() //socket
 
 void Server::start()
 {
+    std::signal(SIGINT, set_shutDown );
+    std::signal(SIGTERM, set_shutDown);
     setupSocket();
 
     pollfd serverPoll;
@@ -44,12 +46,13 @@ void Server::start()
     _pollFds.push_back(serverPoll);
 
     run();
+    shutdownServer();
 }
 
 
 void Server::acceptClients()
 {
-    while (true)
+    while (!_shutDownSignal)
     {
         sockaddr_in clientAddress;
         socklen_t clientLength = sizeof(clientAddress);
@@ -102,7 +105,7 @@ void Server::acceptClients()
 
 void Server::run()
 {
-    while (true)
+    while (!_shutDownSignal)
     {
         int result = poll(&_pollFds[0], _pollFds.size(), -1);
 
@@ -156,7 +159,7 @@ void Server::receiveData(int index)
     char buffer[512];
     int clientFd = _pollFds[index].fd;
 	Client *client = _clients[clientFd];
-    while(true)
+    while(!_shutDownSignal)
     {
         ssize_t bytesReceived = recv(_pollFds[index].fd, buffer, sizeof(buffer), 0);
         std::cout << "recv returned: " << bytesReceived << std::endl;
@@ -305,4 +308,22 @@ void Server::sendData(int index)
     }
 
     _pollFds[index].events &= ~POLLOUT;
+}
+
+void Server::shutdownServer()
+{
+    std::cout << "Shutting down server..." << std::endl;
+   
+    while (_pollFds.size() > 1)
+        removeData(_pollFds.size() - 1);
+
+    // Close listening socket
+    if (_serverFd != -1)
+    {
+        close(_serverFd);
+        _serverFd = -1;
+    }
+
+    _pollFds.clear();
+
 }
