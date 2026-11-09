@@ -11,7 +11,7 @@ CC=c++
 
 HDR_DIR := .
 
-FLAGS := -Wall -Wextra -Werror
+FLAGS := -Wall -Wextra -Werror -std=c++98
 
 AR := ar -rcs
 

@@ -63,9 +63,6 @@ void Server::cmd_USER(Client &client, Args args)
 			return err_ALREADYREGISTRED(client);
 		it++;
 	}
-	for (size_t i = 0; i < args.size(); i++)
-		std::cout << MAGENTA << args[i] << WHITE<< "\n";
-	
 	client.cmd_USER(args[0], args[1], args[3]);
 	if (client.isRegistred() && !client.isWelcome())
 		rpl_WELCOME(client, _date);
@@ -110,7 +107,7 @@ void Server::cmd_JOIN(Client &client, Args args)
 		{
 			Channel *channel = getChannel(name);
 			std::string reply;
-			if (channel == nullptr)
+			if (channel == NULL)
 				_channels.push_back(Channel(this, client, name));
 			else
 				channel->joinClient(client, password);
@@ -126,7 +123,7 @@ void Server::cmd_PART(Client &client, Args args)
 	while (channelIdx != std::string::npos)
 	{
 		std::string name = nextChar(args[0], channelIdx, ',');
-		Channel *channel = nullptr;
+		Channel *channel = NULL;
 		if (!getChannel(client, name, &channel))
 			return ;
 		else
@@ -147,8 +144,8 @@ void Server::cmd_KICK(Client &client, Args args)
 		std::string nickName = nextChar(args[1], userIdx, ',');
 		if (userIdx == std::string::npos && nickName == "")
 			break ;
-		Channel *channel = nullptr;
-		Client *user = nullptr;
+		Channel *channel = NULL;
+		Client *user = NULL;
 		if (!getChannel(client, channelName, &channel) || !getClient(client, nickName, &user))
 			continue ; 
 		channel->kickClient(client, *user, args.size() >= 3 ? args[2] : "");
@@ -159,9 +156,9 @@ void Server::cmd_INVITE(Client &client, Args args)
 {
 	if (args.size() < 2)
 		return err_NEEDMOREPARAMS(client, "INVITE");
-	Client *user = nullptr;
+	Client *user = NULL;
 	Channel *channel = getChannel(args[1]);
-	if (!getClient(client, args[0], &user) || channel == nullptr)
+	if (!getClient(client, args[0], &user) || channel == NULL)
 		return ; 
 	channel->inviteClient(client, *user);
 }
@@ -170,7 +167,7 @@ void Server::cmd_TOPIC(Client &client, Args args)
 {
 	if (args.size() < 1)
 		return err_NEEDMOREPARAMS(client, "TOPIC");
-	Channel *channel = nullptr;
+	Channel *channel = NULL;
 	if (!getChannel(client, args[0], &channel))
 		return ;
 	if (args.size() == 1)
@@ -184,7 +181,7 @@ void Server::cmd_MODE(Client &client, Args args)
 	if (args.size() < 1)
 		return err_NEEDMOREPARAMS(client, "MODE");
 	
-	Channel *channel = nullptr;
+	Channel *channel = NULL;
 	if (!getChannel(client, args[0], &channel))
 		return ;
 	if (args.size() == 1)
@@ -209,8 +206,8 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 	size_t targetIdx = 0;
 	while (targetIdx != std::string::npos)
 	{
-		Channel *tarChannel = nullptr;
-		Client *tarClient = nullptr;
+		Channel *tarChannel = NULL;
+		Client *tarClient = NULL;
 
 		std::string receiver = nextChar(args[0], targetIdx, ',');
 		if (parseChannel(receiver) && getChannel(client, receiver, &tarChannel))
@@ -228,19 +225,19 @@ void Server::cmd_WHO(Client &client, Args args)
 		ClientMap::iterator it = _clients.begin();
 		while (it != _clients.end())
 		{
-			rpl_WHOREPLY(client, nullptr, *it->second);
+			rpl_WHOREPLY(client, NULL, *it->second);
 			it++;
 		}
 		return rpl_ENDOFWHO(client, "*");
 	}
 	Channel *tarChannel = getChannel(args[0]);
-	if (tarChannel != nullptr)
+	if (tarChannel != NULL)
 		return tarChannel->who(client);
 	else
 	{
 		Client *tarClient = getClient(args[0]);
-		if (tarClient != nullptr)
-			rpl_WHOREPLY(client, nullptr, *tarClient);
+		if (tarClient != NULL)
+			rpl_WHOREPLY(client, NULL, *tarClient);
 	}
 	rpl_ENDOFWHO(client, args[0]);
 }

@@ -158,7 +158,6 @@ void Server::receiveData(int index)
     int clientFd = _pollFds[index].fd;
 	Client *client = _clients[clientFd];
 	ssize_t bytesReceived = recv(_pollFds[index].fd, buffer, sizeof(buffer), 0);
-	std::cout << "recv returned: " << bytesReceived << std::endl;
 
 	if (bytesReceived >= 512)
 		return (client->extractLine(), err_INPUTTOOLONG(*client));
@@ -173,7 +172,7 @@ void Server::receiveData(int index)
 	while (client->hasCompleteLine())
 	{
 		std::string line = client->extractLine();
-		std::cout << "IRC message from fd=" << clientFd << ": " << line << std::endl;
+		std::cout << BLUE << "Message from " << client->get(Name_Nick) << ": " <<line << WHITE << std::endl;
 		call_cmd(*client, line);
 	}
 	if (client->isQuiting())
@@ -185,7 +184,7 @@ void Server::removeChannel(Channel &channel)
 	if (it != _channels.end())
 		_channels.erase(it);
 }
-//maybe pass client fd as param and a ptr to client, it its nullptr it atcts like it didnt find
+
 void Server::removeData(int index)
 {
     int clientFd = _pollFds[index].fd;
@@ -218,6 +217,9 @@ void Server::clientToClient(Client& target, Client& sender, const std::string& m
 void Server::sendToClient(Client &client, const std::string& sender, const std::string& message)
 {
     client.appendOutput(sender + " " + message + "\r\n");
+
+	std::cout << YELLOW << sender << " message to " << client.get(Name_Nick) << ": " << message << WHITE << std::endl;
+
     for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)
     {
         if (_pollFds[i].fd == client.getSocket())

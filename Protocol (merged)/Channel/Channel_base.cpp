@@ -79,7 +79,7 @@ void Channel::inviteClient(Client &op, Client &user)
 {
 	Check checks[] = {	&Channel::check_canInvite, 
 						&Channel::check_fullChannel, NULL};
-	if (!checkMultiple(op, checks) || alreadyOnChannel(op, user))
+	if (!checkMultiple(op, checks) || !notOnChannel(op, user))
 		return ;
 	_clients.insert(std::make_pair(&user, Status_Invited));
 	_server->rpl_INVITING(op, user.get(Name_Nick), _name);
@@ -101,7 +101,7 @@ void Channel::changeTopic(Client &client, std::string topic)
 	_topicVal = topic;
 }
 
-bool Channel::consumeArg(Client &client, Args &args, size_t &cur, std::string &out)
+bool Channel::consumeArg(Client &client, Args args, size_t &cur, std::string &out)
 {
 	if (cur == args.size())
 		return (_server->err_NEEDMOREPARAMS(client, "MODE"), false); 

@@ -10,7 +10,7 @@ void Server::rpl_TOPIC(Client &client, std::string channel,std::string topic)
 	serverToClient(client, "332 " + client.get(Name_Nick) + " " + channel + " :" + topic);
 }
 
-void Server::rpl_INVITING(Client &client, std::string invited,std::string channel)
+void Server::rpl_INVITING(Client &client, std::string invited, std::string channel)
 {
 	serverToClient(client,"341 " + client.get(Name_Nick) + " " + invited + " " + channel);
 }
@@ -35,7 +35,7 @@ void Server::rpl_WHOREPLY(Client &client, Channel *channel, Client &user)
 {
 	std::string channelName = "*";
 	std::string channelStatus = "H";
-	if (channel != nullptr)
+	if (channel != NULL)
 	{
 		channelName = channel->getName();
 		channelStatus += ((channel->getClientStatus(user) == Status_Op) ? "@" : "");

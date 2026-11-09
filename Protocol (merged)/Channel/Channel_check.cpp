@@ -5,7 +5,7 @@ bool Channel::checkMultiple(Client &c, Check *checks)
 	for (size_t i = 0; checks[i] != NULL; i++)
 	{
 		if (!(this->*checks[i])(c))
-			return(false);
+			return false;
 	}
 	return true;
 }
@@ -67,7 +67,7 @@ bool Channel::openToEnter(Client &c)
 	return true;
 }
 
-bool Channel::alreadyOnChannel(Client &c, Client &tar)
+bool Channel::notOnChannel(Client &c, Client &tar)
 {
 	ClientChannelStatus status = getClientStatus(tar);
 	if (status == Status_Op || status == Status_Connected)

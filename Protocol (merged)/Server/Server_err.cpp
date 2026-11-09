@@ -19,18 +19,16 @@ void Server::err_NEEDMOREPARAMS(Client &client, std::string cmd)
 	serverToClient(client , "461 " + client.get(Name_Nick) + " " + cmd + " :Not enough parameters");
 }
 
-//args-> nickname
 void Server::err_NICKNAMEINUSE(Client &client, std::string nick)
 {
 	serverToClient(client , "433 " + client.get(Name_Nick) + " " + nick + " :Nickname is already in use");
 }
 
-//args-> empty
 void Server::err_NONICKNAMEGIVEN(Client &client)
 {
 	serverToClient(client , "431 " + client.get(Name_Nick) + " :No nickname given");
 }
-//args-> channel name
+
 void Server::err_NOSUCHCHANNEL(Client &client, std::string channel)
 {
 	serverToClient(client , "403 " + client.get(Name_Nick) + " " + channel + " :No such channel");
@@ -40,12 +38,11 @@ void Server::Server::err_ERRONEUSNICKNAME(Client &client, std::string nick)
 {
 	serverToClient(client , "432 " + client.get(Name_Nick) + " " + nick + " :Erroneus nickname");
 }
-//args-> nick name
+
 void Server::err_NOSUCHNICK(Client &client, std::string nick)
 {
 	serverToClient(client , "401 " + client.get(Name_Nick) + " " + nick + " :No such nick/channel");
 }
-
 
 void Server::err_UNKNOWNMODE(Client &client, char c)
 {

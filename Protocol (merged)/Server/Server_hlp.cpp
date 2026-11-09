@@ -36,15 +36,15 @@ Channel *Server::getChannel(std::string name)
 			return &(*it);
 		it++;
 	}
-	return nullptr;
+	return NULL;
 }
 
 bool Server::getChannel(Client &client, std::string name, Channel **out)
 {
 	*out = getChannel(name);
-	if (*out == nullptr)
+	if (*out == NULL)
 		err_NOSUCHCHANNEL(client, name);
-	return (*out != nullptr);
+	return (*out != NULL);
 }
 
 Client *Server::getClient(std::string name)
@@ -57,15 +57,15 @@ Client *Server::getClient(std::string name)
 			return it->second;
 		it++;
 	}
-	return nullptr;
+	return NULL;
 }
 
 bool Server::getClient(Client &client, std::string name, Client **out)
 {
 	*out = getClient(name);
-	if (*out == nullptr)
+	if (*out == NULL)
 		err_NOSUCHNICK(client, name);
-	return (*out != nullptr);
+	return (*out != NULL);
 }
 
 void Server::removeClientChannels(Client &client)

@@ -50,7 +50,7 @@ class Channel
 		long unsigned int _clientLimit;
 		
 		void updateMode(char c, bool adding);
-		bool consumeArg(Client &client, Args &args, size_t &cur, std::string &out);
+		bool consumeArg(Client &client, Args args, size_t &cur, std::string &out);
 		void toggleOp(Client &client, std::string tarName, bool on);
 		bool check_isOnChannel(Client &c);
 		bool check_isOperator(Client &c);
@@ -58,7 +58,7 @@ class Channel
 		bool check_canInvite(Client &c);
 		bool check_key(Client &c);
 		bool checkMultiple(Client &c, Check *checks);
-		bool alreadyOnChannel(Client &c, Client &tar);
+		bool notOnChannel(Client &c, Client &tar);
 
 };
 #endif
