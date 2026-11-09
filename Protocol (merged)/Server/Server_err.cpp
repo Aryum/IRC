@@ -101,3 +101,8 @@ void Server::err_USERONCHANNEL(Client &client, Client &tar, std::string channel)
 {
 	serverToClient(client , "443 " + tar.get(Name_Nick) + " " + channel + " :is already on channel");
 }
+
+void Server::err_INPUTTOOLONG(Client &client)
+{
+	serverToClient(client , "417 " + client.get(Name_Nick) + " :Input line was too long");
+}

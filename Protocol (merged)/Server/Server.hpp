@@ -45,6 +45,7 @@ class Server
 		void err_INVITEONLYCHAN(Client &client, std::string channel);
 		void err_BADCHANNELKEY(Client &client, std::string channel);
 		void err_CANNOTSENDTOCHAN(Client &client, std::string channel);
+		void err_INPUTTOOLONG(Client &client);
 		void err_NORECIPIENT(Client &client);
 		void err_NOTEXTTOSEND(Client &client);
 		void err_ERRONEUSNICKNAME(Client &client, std::string channel);
@@ -56,6 +57,7 @@ class Server
 		void rpl_TOPIC(Client &client, std::string channel,std::string topic);
 		void rpl_WHOREPLY(Client &client, Channel *channel, Client &user);
 		void rpl_ENDOFWHO(Client &client, std::string query);
+		
 
 	private:
 		static bool _shutDownSignal;

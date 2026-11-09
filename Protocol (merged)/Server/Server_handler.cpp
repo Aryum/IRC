@@ -160,6 +160,8 @@ void Server::receiveData(int index)
 	ssize_t bytesReceived = recv(_pollFds[index].fd, buffer, sizeof(buffer), 0);
 	std::cout << "recv returned: " << bytesReceived << std::endl;
 
+	if (bytesReceived >= 512)
+		return (client->extractLine(), err_INPUTTOOLONG(*client));
 	if(bytesReceived <= 0)
 	{
 		removeData(index);
