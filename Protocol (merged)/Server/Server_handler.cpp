@@ -22,11 +22,9 @@ void Server::setupSocket() //socket
         throw std::runtime_error("bind failed");
 
     if (listen(_serverFd, SOMAXCONN) == -1) //socket listening for connections
-        throw std::runtime_error("listen failed");
+		throw std::runtime_error("listen failed");
 
-    int flags = fcntl(_serverFd, F_GETFL, 0);
-
-    if (flags == -1 || fcntl(_serverFd, F_SETFL, flags | O_NONBLOCK) == -1)
+	if (fcntl(_serverFd, F_SETFL, O_NONBLOCK) == -1)
         throw std::runtime_error("fcntl failed");
 
     std::cout << "Server listening on port " << _port << std::endl;
@@ -34,7 +32,7 @@ void Server::setupSocket() //socket
 
 void Server::start()
 {
-    std::signal(SIGINT, set_shutDown );
+    std::signal(SIGINT, set_shutDown);
     std::signal(SIGTERM, set_shutDown);
     setupSocket();
 
@@ -70,13 +68,12 @@ void Server::acceptClients()
             throw std::runtime_error("accept failed");
         }
 
-        int flags = fcntl(clientFd, F_GETFL, 0);
-
-        if (flags == -1 || fcntl(clientFd, F_SETFL, flags | O_NONBLOCK) == -1)
+		if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1)
         {
             close(clientFd);
-            throw std::runtime_error("fcntl client failed");
-        }
+	        std::cerr << "Error: fcntl client failed" << std::endl;;
+			return;
+		}
 
         char ipBuffer[INET_ADDRSTRLEN];
         const char* ip = inet_ntop(AF_INET, &clientAddress.sin_addr, ipBuffer, sizeof(ipBuffer));
@@ -84,7 +81,8 @@ void Server::acceptClients()
         if (ip == NULL)
         {
             close(clientFd);
-            throw std::runtime_error("inet_ntop failed");
+			std::cerr << "Error: inet_ntop failed" << std::endl;;
+			return;
         }
 
         int clientPort = ntohs(clientAddress.sin_port);
@@ -146,7 +144,7 @@ void Server::run()
                 sendData(i);
 
             --i;
-        }   
+        } 
         if (_pollFds[0].revents & POLLIN)
             acceptClients();
     }
@@ -159,67 +157,25 @@ void Server::receiveData(int index)
     char buffer[512];
     int clientFd = _pollFds[index].fd;
 	Client *client = _clients[clientFd];
-    while(!_shutDownSignal)
-    {
-        ssize_t bytesReceived = recv(_pollFds[index].fd, buffer, sizeof(buffer), 0);
-        std::cout << "recv returned: " << bytesReceived << std::endl;
+	ssize_t bytesReceived = recv(_pollFds[index].fd, buffer, sizeof(buffer), 0);
+	std::cout << "recv returned: " << bytesReceived << std::endl;
 
-        if(bytesReceived > 0)
-        {
-			/*
-            std::map<int, Client*>::iterator it = _clients.find(clientFd);
+	if(bytesReceived <= 0)
+	{
+		removeData(index);
+		return;
+	}
+	std::string data(buffer, bytesReceived);
+	client->appendInput(data);
 
-            if (it == _clients.end())
-            {
-                removeData(index);
-                return;
-            }
-			*/
-            std::string data(buffer, bytesReceived);
-            client->appendInput(data);
-
-            std::cout << "Buffer contents: [";
-
-            for (std::string::size_type i = 0; i < data.size(); ++i)
-            {
-				
-                if (data[i] == '\r')
-                    std::cout << "\\r";
-                else if (data[i] == '\n')
-                    std::cout << "\\n";
-                else
-                    std::cout << data[i];
-            }
-
-            std::cout << "]" << std::endl;
-
-            while (client->hasCompleteLine())
-            {
-                std::string line = client->extractLine();
-                std::cout << "IRC message from fd=" << clientFd << ": " << line << std::endl;
-				call_cmd(*client, line);
-			}
-			if (client->isQuiting())
-				return removeData(index);
-            continue;
-        }
-
-        if(bytesReceived == 0)
-        {
-            removeData(index);
-            return ; 
-        }
-
-        if(errno == EINTR)
-            continue;
-
-        if(errno == EAGAIN)
-            return;
-
-        removeData(index);
-        return;
-
-    }
+	while (client->hasCompleteLine())
+	{
+		std::string line = client->extractLine();
+		std::cout << "IRC message from fd=" << clientFd << ": " << line << std::endl;
+		call_cmd(*client, line);
+	}
+	if (client->isQuiting())
+		return removeData(index);
 }
 void Server::removeChannel(Channel &channel)
 {
@@ -284,30 +240,22 @@ void Server::sendData(int index)
 
     Client* client = it->second;
 
-    while (client->hasPendingOutput())
+    if (client->hasPendingOutput())
     {
         const std::string& data = client->getOutputBuffer();
 
         ssize_t bytesSent = send(clientFd, data.data(), data.size(), 0);
 
-        if (bytesSent > 0)
-        {
-            client->removeSentOutput(bytesSent);
-            continue;
-        }
-
-        if (bytesSent == -1 && errno == EINTR)
-            continue;
-
-        if (bytesSent == -1 &&
-            (errno == EAGAIN || errno == EWOULDBLOCK))
-            return;
-
-        removeData(index);
-        return;
+		if (bytesSent <= 0)
+		{
+			removeData(index);
+        	return;
+		}
+		client->removeSentOutput(bytesSent);
     }
 
-    _pollFds[index].events &= ~POLLOUT;
+	if (!client->hasPendingOutput())
+    	_pollFds[index].events &= ~POLLOUT;
 }
 
 void Server::shutdownServer()

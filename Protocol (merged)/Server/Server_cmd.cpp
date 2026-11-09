@@ -244,3 +244,4 @@ void Server::cmd_WHO(Client &client, Args args)
 	}
 	rpl_ENDOFWHO(client, args[0]);
 }
+
