@@ -11,8 +11,7 @@ Client::Client(int socket) :
 		_userSet(false),
 		_nickSet(false),
 		_isWelcome(false),
-		_isQuiting(false),
-		_curChannel(nullptr)
+		_isQuiting(false)
 {}
 Client::~Client()
 {}

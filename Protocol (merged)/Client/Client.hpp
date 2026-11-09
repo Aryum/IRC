@@ -61,7 +61,6 @@ class Client
 		bool _isWelcome;
 		bool _isQuiting;
 
-		Channel *_curChannel;
         std::string inputBuffer;
         std::string outputBuffer;
 
