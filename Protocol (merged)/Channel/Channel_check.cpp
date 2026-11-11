@@ -38,7 +38,7 @@ bool Channel::check_isOperator(Client &c)
 
 bool Channel::check_fullChannel(Client &c)
 {
-	if (_clientLimit == _clients.size())
+	if (_clientLimit == _clientCount)
 		return (_server->err_CHANNELISFULL(c, _name), false);
 	return true;
 }

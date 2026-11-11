@@ -47,6 +47,7 @@ class Channel
 		std::map<Client*, ClientChannelStatus> _clients;
 		bool _inviteOnly;
 		bool _topicLocked;
+		size_t _clientCount;
 		long unsigned int _clientLimit;
 		
 		void updateMode(char c, bool adding);

@@ -10,6 +10,7 @@ Channel::Channel(Server* server, Client &client, std::string &name) :
 	_clients(),
 	_inviteOnly(false),
 	_topicLocked(false),
+	_clientCount(1),
 	_clientLimit(-1)
 {
 	_clients.insert(std::make_pair(&client, Status_Op));
@@ -42,10 +43,18 @@ void Channel::joinClient(Client &client, std::string password)
 						&Channel::check_key, NULL};
 	if (!checkMultiple(client, checks))
 		return ;
-	size_t size = _clients.size();
-	_clients.insert(std::make_pair(&client, Status_Connected));
-	if (size == _clients.size())
-		return ;
+	switch (getClientStatus(client))
+	{
+		case Status_Invited:
+			_clients[&client] = Status_Connected;
+			break;
+		case Status_None:
+			_clients.insert(std::make_pair(&client, Status_Connected));
+			break;
+		default:
+			return;
+	}
+	_clientCount++;
 	getTopic(client);
 	_server->clientToClient(client, client, "JOIN " + _name);
 	broadcastMessage(client, "PRIVMSG", "JOIN " + _name, false);
@@ -53,8 +62,9 @@ void Channel::joinClient(Client &client, std::string password)
 
 void Channel::removeClient(Client &client)
 {
+	_clientCount--;
 	_clients.erase(&client);
-	if (_clients.size() == 0)
+	if (_clientCount == 0)
 		_server->removeChannel(*this);
 }
 void Channel::partClient(Client &client, std::string reason)
