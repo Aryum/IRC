@@ -173,7 +173,10 @@ void Channel::changeMode(Client &client, Args args)
 				break;
 			case 'k':
 				if (adding)
-					consumeArg(client, args, curParam,_passwordVal);
+				{
+					if (!consumeArg(client, args, curParam, _passwordVal))
+						break ;
+				} 
 				else
 					_passwordVal = "";
 				updateMode(args[1][i], adding);
@@ -183,8 +186,12 @@ void Channel::changeMode(Client &client, Args args)
 					toggleOp(client, var, adding);
 				break;
 			case 'l':
-				if (adding && consumeArg(client, args, curParam, var))
+				if (adding)
+				{
+					if (!consumeArg(client, args, curParam, var))
+						break ;
 					_clientLimit = atoi(var.c_str());
+				}
 				else
 					_clientLimit = -1;
 				updateMode(args[1][i], adding);
@@ -215,13 +222,14 @@ std::string Channel::getModes(Client &client)
 	std::string ret = _mode;
 	std::ostringstream stream;
 
+	ClientChannelStatus status = getClientStatus(client);
 	for (size_t i = 0; i < _mode.size(); i++)
 	{
 		switch (_mode[i])
 		{
 			case 'k':
 				ret += " ";
-				if (getClientStatus(client) != Status_None)
+				if (status == Status_Connected || status == Status_Op)
 					ret += _passwordVal;
 				else
 					ret += "*";
