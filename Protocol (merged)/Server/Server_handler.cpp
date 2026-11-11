@@ -207,10 +207,12 @@ void Server::removeData(int index)
 
 void Server::serverToClient(Client& target, const std::string& message)
 {
+	std::cout << YELLOW;
 	sendToClient(target, ":IRC", message);
 }
 void Server::clientToClient(Client& target, Client& sender, const std::string& message)
 {
+	std::cout << GREEN; 
 	sendToClient(target, ":" + sender.get(Name_Full), message);
 }
 
@@ -218,7 +220,7 @@ void Server::sendToClient(Client &client, const std::string& sender, const std::
 {
     client.appendOutput(sender + " " + message + "\r\n");
 
-	std::cout << YELLOW << sender << " message to " << client.get(Name_Nick) << ": " << message << WHITE << std::endl;
+	std::cout << sender << " message to " << client.get(Name_Nick) << ": " << message << WHITE << std::endl;
 
     for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)
     {

@@ -60,7 +60,7 @@ bool Channel::check_key(Client &c)
 	return true;
 }
 
-bool Channel::openToEnter(Client &c)
+bool Channel::clientCanEnter(Client &c)
 {
 	if (_inviteOnly && getClientStatus(c) == Status_None)
 		return (_server->err_INVITEONLYCHAN(c, _name), false);

@@ -38,7 +38,7 @@ ClientChannelStatus Channel::getClientStatus( Client &client)
 void Channel::joinClient(Client &client, std::string password)
 {
 	_clientPassword = password;
-	Check checks[] = {	&Channel::openToEnter, 
+	Check checks[] = {	&Channel::clientCanEnter, 
 						&Channel::check_fullChannel, 
 						&Channel::check_key, NULL};
 	if (!checkMultiple(client, checks))

@@ -35,7 +35,7 @@ class Channel
 		void changeMode(Client &client, Args args);
 		void inviteClient(Client &op, Client &user);
 		void broadcastMessage(Client &client, std::string cmd, std::string message, bool sendSender);
-		bool openToEnter(Client &c);
+		bool clientCanEnter(Client &c);
 	
 	private:
 		Server* _server;
