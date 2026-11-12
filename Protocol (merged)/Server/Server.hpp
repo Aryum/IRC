@@ -50,6 +50,8 @@ class Server
 		void err_NOTEXTTOSEND(Client &client);
 		void err_ERRONEUSNICKNAME(Client &client, std::string channel);
 		void err_USERONCHANNEL(Client &client, Client &tar, std::string channel);
+		void err_INVALIDKEY(Client &client, std::string channel);
+
 		void rpl_WELCOME(Client &client, std::string date);
 		void rpl_CHANNELMODEIS(Client &client, Channel &channel);
 		void rpl_INVITING(Client &client, std::string invited,std::string channel);
@@ -87,6 +89,8 @@ class Server
 		
 		void sendToClient(Client &client, const std::string& sender, const std::string& message);
 		static void set_shutDown(int signal);
+		void remove_trailing(std::string cmd, std::string &last);
+
 
 
 		

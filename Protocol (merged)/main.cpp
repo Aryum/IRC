@@ -20,9 +20,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argv[2][0] == '\0')
+    if (argv[2][0] == '\0' || std::string(argv[2]).find(' ', 0) != std::string::npos)
     {
-        std::cerr << "Error: empty password" << std::endl;
+        std::cerr << "Error: invalid password" << std::endl;
         return 1;
     }
 

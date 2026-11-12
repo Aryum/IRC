@@ -37,6 +37,21 @@ std::string Server::getDate() const
 	return _date;
 }
 
+void Server::remove_trailing(std::string cmd, std::string &last)
+{
+	std::string options[] = {"JOIN", "MODE", "PRIVMSG", "" };
+
+	for (int i = 0; options[i] != ""; i++)
+	{
+		if (cmd == options[i])
+		{
+			if (last[0] == ':')
+				last.erase(0, 1);
+			return ;
+		}
+	}
+}
+
 void Server::call_cmd(Client &client, std::string input)
 {
 	size_t spaceIdx = 0;
@@ -51,7 +66,7 @@ void Server::call_cmd(Client &client, std::string input)
 		if (i == 1 && token[0] == '@')
 			continue;
 
-		if (token[0] ==  ':' && spaceIdx != std::string::npos)
+		if (token[0] == ':' && spaceIdx != std::string::npos)
 		{
 			if (!prefix)
 			{
@@ -69,10 +84,11 @@ void Server::call_cmd(Client &client, std::string input)
 	if (it == _cmd.end())
 		return err_UNKNOWNCOMMAND(client, command);
 	if (!params.empty())
-	{
-		if (command != "PRIVMSG" && params[params.size() - 1][0] == ':')
-			params[params.size() - 1].erase(0, 1);
-	}
+		remove_trailing(command, params[params.size() - 1]);
+	std::cout << MAGENTA << "Params: " << WHITE << std::endl;
+	for (size_t i = 0; i < params.size(); i++)
+		std::cout << "	" << params[i] << std::endl;
+	std::cout << std::endl;
 	(this->*(it->second))(client, params);
 }
 

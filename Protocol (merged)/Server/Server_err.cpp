@@ -103,3 +103,9 @@ void Server::err_INPUTTOOLONG(Client &client)
 {
 	serverToClient(client , "417 " + client.get(Name_Nick) + " :Input line was too long");
 }
+
+void Server::err_INVALIDKEY(Client &client, std::string channel)
+{
+	serverToClient(client , "525 " + client.get(Name_Nick) + " " + channel + " :Key is not well-formed");
+
+}

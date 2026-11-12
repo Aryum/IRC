@@ -24,7 +24,7 @@ class Client
 
 		int getSocket();
 		void cmd_NICK(std::string nick);
-		void cmd_USER(std::string user, std::string host, std::string nick);
+		void cmd_USER(std::string user, std::string host, std::string real);
 		void setPasswordVerified();
 		void setWelcome();
 		void setQuiting();

@@ -79,7 +79,7 @@ void Channel::partClient(Client &client, std::string reason)
 
 void Channel::kickClient(Client &op, Client &user, std::string reason)
 {
-	if (!check_isOperator(op))
+	if (!check_isOperator(op) && !check_isOnChannel(user))
 		return;
 	broadcastMessage(op, "KICK", _name + user.get(Name_Nick) + ":" + reason, true);
 	_clients.erase(&user);
@@ -174,8 +174,12 @@ void Channel::changeMode(Client &client, Args args)
 			case 'k':
 				if (adding)
 				{
-					if (!consumeArg(client, args, curParam, _passwordVal))
+					if (!consumeArg(client, args, curParam, var))
 						break ;
+					if (var.find(' ', 0) != std::string::npos)
+						_server->err_INVALIDKEY(client, _name);
+					else
+						_passwordVal = var;
 				} 
 				else
 					_passwordVal = "";

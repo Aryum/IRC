@@ -56,13 +56,8 @@ void Server::cmd_USER(Client &client, Args args)
 {
 	if (args.size() < 4)
 		return err_NEEDMOREPARAMS(client, "USER");
-	ClientMap::iterator it = _clients.begin();
-	while (it != _clients.end())
-	{
-		if (it->first == client.isRegistred())
-			return err_ALREADYREGISTRED(client);
-		it++;
-	}
+	if (client.isRegistred())
+		return err_ALREADYREGISTRED(client);
 	client.cmd_USER(args[0], args[1], args[3]);
 	if (client.isRegistred() && !client.isWelcome())
 		rpl_WELCOME(client, _date);
@@ -85,7 +80,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 
 static bool parseChannel(std::string name)
 {
-	return (name[0] == '&' || name[0] == '#') && name.size() < 200;
+	return (name[0] == '&' || name[0] == '#') && name.size() > 1 && name.size() < 200  ;
 }
 
 void Server::cmd_JOIN(Client &client, Args args)
@@ -200,7 +195,7 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 		else
 			return err_NOTEXTTOSEND(client);
 	}
-	if (args[1].size() == 1)
+	if (args[1].size() == 1 && args[0][1] == ':')
 		return err_NOTEXTTOSEND(client);
 
 	size_t targetIdx = 0;
