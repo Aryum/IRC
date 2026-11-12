@@ -13,7 +13,7 @@ Channel::Channel(Server* server, Client &client, std::string &name) :
 	_clientCount(1),
 	_clientLimit(-1)
 {
-	std::cout << MAGENTA << "Creating channel " << _name << WHITE << std::endl;
+	std::cout << MAGENTA << "Creating channel " << WHITE << _name  << std::endl;
 	_clients.insert(std::make_pair(&client, Status_Op));
 	getTopic(client);
 	_server->clientToClient(client, client, "JOIN " + _name);
@@ -72,7 +72,7 @@ void Channel::removeClient(Client &client)
 	_clients.erase(&client);
 	if (_clientCount == 0)
 	{
-		std::cout << MAGENTA << "Removing channel " << _name << WHITE << std::endl;
+		std::cout << MAGENTA << "Removing channel " << WHITE << _name  << std::endl;
 		_server->removeChannel(*this);
 	}
 }
