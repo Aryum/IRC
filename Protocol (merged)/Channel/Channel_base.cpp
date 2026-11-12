@@ -13,6 +13,7 @@ Channel::Channel(Server* server, Client &client, std::string &name) :
 	_clientCount(1),
 	_clientLimit(-1)
 {
+	std::cout << MAGENTA << "Creating channel " << _name << WHITE << std::endl;
 	_clients.insert(std::make_pair(&client, Status_Op));
 	getTopic(client);
 	_server->clientToClient(client, client, "JOIN " + _name);
@@ -56,8 +57,13 @@ void Channel::joinClient(Client &client, std::string password)
 	}
 	_clientCount++;
 	getTopic(client);
-	_server->clientToClient(client, client, "JOIN " + _name);
-	broadcastMessage(client, "PRIVMSG", "JOIN " + _name, false);
+
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	while (it != _clients.end())
+	{
+		_server->clientToClient(*it->first, client, "JOIN " + _name);
+		it++;
+	}
 }
 
 void Channel::removeClient(Client &client)
@@ -65,18 +71,32 @@ void Channel::removeClient(Client &client)
 	_clientCount--;
 	_clients.erase(&client);
 	if (_clientCount == 0)
+	{
+		std::cout << MAGENTA << "Removing channel " << _name << WHITE << std::endl;
 		_server->removeChannel(*this);
+	}
 }
+
+void Channel::quitClient(Client &client, std::string reason)
+{
+	leaveClient(client, "QUIT", reason);
+}
+
 void Channel::partClient(Client &client, std::string reason)
+{
+	leaveClient(client, "PART", reason);
+}
+
+
+void Channel::leaveClient(Client &client, std::string source, std::string reason)
 {
 	if (!check_isOnChannel(client))
 		return ;
-	if(reason != "")
-		reason.insert(0, " :");
-	broadcastMessage(client, "PART", _name + reason, true);
+	if(reason[0] != ':')
+		reason.insert(0, ":");
+	broadcastMessage(client, source, reason, true);
 	removeClient(client);
 }
-
 void Channel::kickClient(Client &op, Client &user, std::string reason)
 {
 	if (!check_isOperator(op) && !check_isOnChannel(user))

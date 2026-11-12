@@ -5,7 +5,13 @@ bool Server::_shutDownSignal = false;
 Server::Server(int port, const std::string& password) :
 	_port(port), 
 	_serverFd(-1), 
-	_password(password)
+	_password(password),
+	_pollFds(),
+	_channels(),
+	_date(),
+	_quitingClient(),
+	_clients(),
+	_cmd()
 {
 	_cmd["PASS"] = &Server::cmd_PASS;
 	_cmd["NICK"] = &Server::cmd_NICK;
@@ -85,9 +91,9 @@ void Server::call_cmd(Client &client, std::string input)
 		return err_UNKNOWNCOMMAND(client, command);
 	if (!params.empty())
 		remove_trailing(command, params[params.size() - 1]);
-	std::cout << MAGENTA << "Params: " << WHITE << std::endl;
+	std::cout << MAGENTA << "	Params: " << WHITE << std::endl;
 	for (size_t i = 0; i < params.size(); i++)
-		std::cout << "	" << params[i] << std::endl;
+		std::cout << "		" << params[i] << std::endl;
 	std::cout << std::endl;
 	(this->*(it->second))(client, params);
 }

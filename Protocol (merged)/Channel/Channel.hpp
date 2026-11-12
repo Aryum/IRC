@@ -28,6 +28,7 @@ class Channel
 		void joinClient(Client &client, std::string password);
 		void kickClient(Client &op, Client &user, std::string reason);
 		void partClient(Client &client, std::string reason);
+		void quitClient(Client &client, std::string reason);
 		void changeTopic(Client &client, std::string topic);
 		void getTopic(Client &client);
 		void removeClient(Client &client);
@@ -60,6 +61,8 @@ class Channel
 		bool check_key(Client &c);
 		bool checkMultiple(Client &c, Check *checks);
 		bool notOnChannel(Client &c, Client &tar);
+		void leaveClient(Client &client, std::string source, std::string reason);
+
 
 };
 #endif

@@ -12,8 +12,6 @@ class Server
 		void call_cmd(Client &client, std::string input);
 
 		void start();
-        void handleMessage(int fd);
-        std::string readMessage(int fd); 
         void setupSocket();
         void run();
         void acceptClients();
@@ -69,6 +67,7 @@ class Server
         std::vector<pollfd> _pollFds;
 		std::vector<Channel> _channels;
 		std::string _date;
+		std::vector<int> _quitingClient;
 		ClientMap _clients;
 		CmdMap _cmd;
 

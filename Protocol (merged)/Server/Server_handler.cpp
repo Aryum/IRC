@@ -144,7 +144,10 @@ void Server::run()
                 sendData(i);
 
             --i;
-        } 
+        }
+		for (size_t h = 0; h < _quitingClient.size(); h++)
+			removeData(_quitingClient[h]);
+		_quitingClient.clear();
         if (_pollFds[0].revents & POLLIN)
             acceptClients();
     }
@@ -172,11 +175,12 @@ void Server::receiveData(int index)
 	while (client->hasCompleteLine())
 	{
 		std::string line = client->extractLine();
-		std::cout << BLUE << "Message from " << client->get(Name_Nick) << ": " <<line << WHITE << std::endl;
+		std::cout << BLUE << "Message from " << client->get(Name_Nick) << ": " << WHITE << line  << std::endl;
 		call_cmd(*client, line);
 	}
 	if (client->isQuiting())
-		return removeData(index);
+		_quitingClient.push_back(index);
+	
 }
 void Server::removeChannel(Channel &channel)
 {
@@ -220,7 +224,7 @@ void Server::sendToClient(Client &client, const std::string& sender, const std::
 {
     client.appendOutput(sender + " " + message + "\r\n");
 
-	std::cout << sender << " message to " << client.get(Name_Nick) << ": " << message << WHITE << std::endl;
+	std::cout << sender << " message to " << client.get(Name_Nick) << ": " << WHITE << message  << std::endl;
 
     for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)
     {
@@ -279,5 +283,4 @@ void Server::shutdownServer()
     }
 
     _pollFds.clear();
-
 }

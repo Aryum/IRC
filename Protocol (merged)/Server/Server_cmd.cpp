@@ -73,7 +73,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 	for (size_t i = 0; i < _channels.size(); i++)
 	{
 		if (_channels[i].getClientStatus(client) != Status_None)
-			_channels[i].partClient(client, reason);
+			_channels[i].quitClient(client, reason);
 	}
 	client.setQuiting();
 }
