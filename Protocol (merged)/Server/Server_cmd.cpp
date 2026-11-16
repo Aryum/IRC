@@ -227,7 +227,7 @@ void Server::cmd_WHO(Client &client, Args args)
 	}
 	Channel *tarChannel = getChannel(args[0]);
 	if (tarChannel != NULL)
-		return tarChannel->who(client);
+		tarChannel->who(client);
 	else
 	{
 		Client *tarClient = getClient(args[0]);

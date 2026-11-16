@@ -91,6 +91,9 @@ void Server::call_cmd(Client &client, std::string input)
 		return err_UNKNOWNCOMMAND(client, command);
 	if (!params.empty())
 		remove_trailing(command, params[params.size() - 1]);
+	std::cout << GREEN << "	Command:" << WHITE << std::endl;
+		std::cout << "		" << command << std::endl;
+
 	std::cout << MAGENTA << "	Params: " << WHITE << std::endl;
 	for (size_t i = 0; i < params.size(); i++)
 		std::cout << "		" << params[i] << std::endl;

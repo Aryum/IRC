@@ -43,7 +43,7 @@ void Server::rpl_WHOREPLY(Client &client, Channel *channel, Client &user)
 	serverToClient(client, "352 " + client.get(Name_Nick) + " " + channelName + " " + \
 					user.get(Name_User) + " " + user.get(Name_Host) + " IRC " + user.get(Name_Nick) + " " + \
 					channelStatus + " " + \
-					":0 " + user.get(Name_Real));
+					":0 " + user.get(Name_Real).erase(0, 1));
 }
 
 void Server::rpl_ENDOFWHO(Client &client, std::string query)
