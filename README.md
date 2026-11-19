@@ -54,10 +54,11 @@ nc -C 127.0.0.1 8080
 ```
 
 Once connected, you can register using the following IRC commands:
-
 - `PASS` – Authenticate with the server password.
 - `NICK` – Set your nickname.
 - `USER` – Register your username.
+
+After being registered you are allowed to use:
 - `JOIN` – Join an existing channel or create a new one.
 - `PRIVMSG` – Send private messages or channel messages.
 - `KICK` – Remove a user from a channel.
