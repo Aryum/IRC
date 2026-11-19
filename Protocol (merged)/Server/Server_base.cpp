@@ -43,6 +43,20 @@ std::string Server::getDate() const
 	return _date;
 }
 
+
+bool Server::allowed_command(Client &client, std::string cmd)
+{
+	if (client.isRegistred())
+		return true;
+	std::string options[] = { "PASS", "USER", "NICK", "" };
+	for (int i = 0; options[i] != ""; i++)
+	{
+		if (cmd == options[i])
+			return true;
+	}
+	return false;
+}
+
 void Server::remove_trailing(std::string cmd, std::string &last)
 {
 	std::string options[] = {"JOIN", "MODE", "PRIVMSG", "" };
@@ -92,13 +106,15 @@ void Server::call_cmd(Client &client, std::string input)
 	if (!params.empty())
 		remove_trailing(command, params[params.size() - 1]);
 	std::cout << GREEN << "	Command:" << WHITE << std::endl;
-		std::cout << "		" << command << std::endl;
-
+	std::cout << "		" << command << std::endl;
 	std::cout << MAGENTA << "	Params: " << WHITE << std::endl;
 	for (size_t i = 0; i < params.size(); i++)
 		std::cout << "		" << params[i] << std::endl;
 	std::cout << std::endl;
-	(this->*(it->second))(client, params);
+	if (allowed_command(client, command))
+		(this->*(it->second))(client, params);
+	else
+		err_NOTREGISTERED(client);
 }
 
 void Server::set_shutDown(int signal)

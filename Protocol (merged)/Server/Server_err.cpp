@@ -107,5 +107,9 @@ void Server::err_INPUTTOOLONG(Client &client)
 void Server::err_INVALIDKEY(Client &client, std::string channel)
 {
 	serverToClient(client , "525 " + client.get(Name_Nick) + " " + channel + " :Key is not well-formed");
+}
 
+void Server::err_NOTREGISTERED(Client &client)
+{
+	serverToClient(client , "451 " + client.get(Name_Nick) + ":You have not registered");
 }

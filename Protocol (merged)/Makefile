@@ -1,4 +1,4 @@
-NAME := IRC
+NAME := ircserv
 
 MAIN := main.cpp
 HDR_DIR = .
