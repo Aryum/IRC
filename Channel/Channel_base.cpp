@@ -89,6 +89,7 @@ void Channel::removeClient(Client &client)
 			nextOp = it;
 		it++;
 	}
+	broadcastMessage(*nextOp->first, "PRIVMSG", "is now op", true);
 	nextOp->second = Status_Op;
 }
 
