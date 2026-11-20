@@ -32,7 +32,7 @@ Channel *Server::getChannel(std::string name)
 
 	while (it != _channels.end())
 	{
-		if (it->getName() == name)
+		if (!it->getClientCount() == 0 && it->getName() == name)
 			return &(*it);
 		it++;
 	}
@@ -66,13 +66,4 @@ bool Server::getClient(Client &client, std::string name, Client **out)
 	if (*out == NULL)
 		err_NOSUCHNICK(client, name);
 	return (*out != NULL);
-}
-
-void Server::removeClientChannels(Client &client)
-{
-	for (size_t i = 0; i < _channels.size(); i++)
-	{
-		if (_channels[i].getClientStatus(client) != Status_None)
-			_channels[i].removeClient(client);
-	}
 }

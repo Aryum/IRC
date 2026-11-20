@@ -69,6 +69,8 @@ class Server
 		std::vector<Channel> _channels;
 		std::string _date;
 		std::vector<int> _quitingClient;
+		std::vector<Channel *> _removeChannel;
+		
 		ClientMap _clients;
 		CmdMap _cmd;
 

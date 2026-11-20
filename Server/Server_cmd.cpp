@@ -72,7 +72,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 		reason = "Quit";
 	for (size_t i = 0; i < _channels.size(); i++)
 	{
-		if (_channels[i].getClientStatus(client) != Status_None)
+		if (_channels[i].isOnChannel(client))
 			_channels[i].quitClient(client, reason);
 	}
 	client.setQuiting();
@@ -141,9 +141,10 @@ void Server::cmd_KICK(Client &client, Args args)
 			break ;
 		Channel *channel = NULL;
 		Client *user = NULL;
+		//keep kicking until there are no clients
 		if (!getChannel(client, channelName, &channel) || !getClient(client, nickName, &user))
 			continue ; 
-		channel->kickClient(client, *user, args.size() >= 3 ? args[2] : "");
+		channel->kickClient(client, *user, args.size() >= 3 ? args[2] : nickName);
 	}
 }
 

@@ -5,7 +5,6 @@ Channel::Channel(Server* server, Client &client, std::string &name) :
 	_name(name),
 	_topicVal(),
 	_passwordVal(),
-	_clientPassword(),
 	_mode(),
 	_clients(),
 	_inviteOnly(false),
@@ -15,8 +14,8 @@ Channel::Channel(Server* server, Client &client, std::string &name) :
 {
 	std::cout << MAGENTA << "Creating channel " << WHITE << _name  << std::endl;
 	_clients.insert(std::make_pair(&client, Status_Op));
-	getTopic(client);
 	_server->clientToClient(client, client, "JOIN " + _name);
+	getTopic(client);
 }
 
 bool Channel::operator==(const Channel &other) const
@@ -24,25 +23,26 @@ bool Channel::operator==(const Channel &other) const
 	return _name == other._name;
 }
 
+std::string Channel::getName()
+{
+	return _name;
+}
+
+int Channel::getClientCount()
+{
+	return _clientCount;
+}
 ClientChannelStatus Channel::getClientStatus( Client &client)
 {
-	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
-	while (it != _clients.end())
-	{
-		if (&client == it->first)
-			return it->second;
-		it++;
-	}
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.find(&client);
+	if (it != _clients.end())
+		return it->second;
 	return Status_None;
 }
 
 void Channel::joinClient(Client &client, std::string password)
 {
-	_clientPassword = password;
-	Check checks[] = {	&Channel::clientCanEnter, 
-						&Channel::check_fullChannel, 
-						&Channel::check_key, NULL};
-	if (!checkMultiple(client, checks))
+	if (!test_clientCanEnter(client, password))
 		return ;
 	switch (getClientStatus(client))
 	{
@@ -56,30 +56,59 @@ void Channel::joinClient(Client &client, std::string password)
 			return;
 	}
 	_clientCount++;
-	getTopic(client);
 
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		_server->clientToClient(*it->first, client, "JOIN " + _name);
+		if (it->second != Status_Invited)
+			_server->clientToClient(*it->first, client, "JOIN " + _name);
 		it++;
 	}
+	getTopic(client);
+
 }
 
 void Channel::removeClient(Client &client)
 {
-	_clientCount--;
+	ClientChannelStatus status = getClientStatus(client);
 	_clients.erase(&client);
+	if (status == Status_Invited || status == Status_None)
+		return ; 
+	_clientCount--;
 	if (_clientCount == 0)
+		return _server->removeChannel(*this);
+	if (status != Status_Op)
+		return ;
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	std::map<Client*, ClientChannelStatus>::iterator nextOp = _clients.end();
+	while (it != _clients.end())
 	{
-		std::cout << MAGENTA << "Removing channel " << WHITE << _name  << std::endl;
-		_server->removeChannel(*this);
+		if (it->second == Status_Op)
+			return ;
+		if (nextOp == _clients.end() && it->second == Status_Connected)
+			nextOp = it;
+		it++;
 	}
+	nextOp->second = Status_Op;
 }
 
 void Channel::quitClient(Client &client, std::string reason)
 {
-	leaveClient(client, "QUIT", reason);
+	if (getClientStatus(client) == Status_Invited)
+	{
+		_clients.erase(&client);
+		return ;
+	}
+	if(reason[0] != ':')
+		reason.insert(0, ":");
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	while (it != _clients.end())
+	{
+		if (it->second != Status_Invited)
+			_server->clientToClient(*it->first, client, "QUIT " + reason);
+		it++;
+	}
+	removeClient(client);
 }
 
 void Channel::partClient(Client &client, std::string reason)
@@ -87,10 +116,9 @@ void Channel::partClient(Client &client, std::string reason)
 	leaveClient(client, "PART", reason);
 }
 
-
 void Channel::leaveClient(Client &client, std::string source, std::string reason)
 {
-	if (!check_isOnChannel(client))
+	if (!test_senderOnChannel(client))
 		return ;
 	if(reason[0] != ':')
 		reason.insert(0, ":");
@@ -99,17 +127,15 @@ void Channel::leaveClient(Client &client, std::string source, std::string reason
 }
 void Channel::kickClient(Client &op, Client &user, std::string reason)
 {
-	if (!check_isOperator(op) && !check_isOnChannel(user))
+	if (!test_isOperator(op) || !test_targetOnChannel(op, user))
 		return;
-	broadcastMessage(op, "KICK", _name + user.get(Name_Nick) + ":" + reason, true);
-	_clients.erase(&user);
+	broadcastMessage(op, "KICK", user.get(Name_Nick) + " :" + reason, true);
+	removeClient(user);
 }
 
 void Channel::inviteClient(Client &op, Client &user)
 {
-	Check checks[] = {	&Channel::check_canInvite, 
-						&Channel::check_fullChannel, NULL};
-	if (!checkMultiple(op, checks) || !notOnChannel(op, user))
+	if (!test_canInvite(op) || !test_targetNotOnChannel(op, user))
 		return ;
 	_clients.insert(std::make_pair(&user, Status_Invited));
 	_server->rpl_INVITING(op, user.get(Name_Nick), _name);
@@ -126,9 +152,10 @@ void Channel::getTopic(Client &client)
 
 void Channel::changeTopic(Client &client, std::string topic)
 {
-	if (_topicLocked && !check_isOperator(client))
+	if (!test_canChangeTopic(client))
 		return ;
 	_topicVal = topic;
+	broadcastMessage(client, "TOPIC", ":" + topic, true);
 }
 
 bool Channel::consumeArg(Client &client, Args args, size_t &cur, std::string &out)
@@ -147,6 +174,8 @@ void Channel::toggleOp(Client &client, std::string tarName, bool on)
 	{
 		if (it->first->get(Name_Nick) == tarName)
 		{
+			if (it->second == Status_Invited)
+				break ;
 			it->second = on ? Status_Op : Status_Connected;
 			return ;
 		}
@@ -169,9 +198,10 @@ void Channel::updateMode(char c, bool adding)
 
 void Channel::changeMode(Client &client, Args args)
 {
-	if (!check_isOperator(client))
+	if (!test_isOperator(client))
 		return;
 	bool adding = true;
+	int limit = 0;
 	size_t curParam = 2;
 	for (size_t i = 0; args[1][i] != '\0'; i++)
 	{
@@ -197,7 +227,10 @@ void Channel::changeMode(Client &client, Args args)
 					if (!consumeArg(client, args, curParam, var))
 						break ;
 					if (var.find(' ', 0) != std::string::npos)
+					{
 						_server->err_INVALIDKEY(client, _name);
+						break ;
+					}
 					else
 						_passwordVal = var;
 				} 
@@ -214,7 +247,10 @@ void Channel::changeMode(Client &client, Args args)
 				{
 					if (!consumeArg(client, args, curParam, var))
 						break ;
-					_clientLimit = atoi(var.c_str());
+					limit = atoi(var.c_str());
+					if (limit <= 0)
+						break;
+					_clientLimit = limit;
 				}
 				else
 					_clientLimit = -1;
@@ -230,12 +266,12 @@ void Channel::changeMode(Client &client, Args args)
 
 void Channel::broadcastMessage(Client &client, std::string cmd, std::string message, bool sendSender)
 {
-	if (getClientStatus(client) == Status_None)
+	if (!isOnChannel(client))
 		return _server->err_CANNOTSENDTOCHAN(client, _name);
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		if (sendSender || client != *(it->first))
+		if (it->second != Status_Invited && (sendSender || &client != it->first) )
 			_server->clientToClient(*it->first, client, cmd + " " + _name + " " + message);
 		it++;
 	}
@@ -246,14 +282,13 @@ std::string Channel::getModes(Client &client)
 	std::string ret = _mode;
 	std::ostringstream stream;
 
-	ClientChannelStatus status = getClientStatus(client);
 	for (size_t i = 0; i < _mode.size(); i++)
 	{
 		switch (_mode[i])
 		{
 			case 'k':
 				ret += " ";
-				if (status == Status_Connected || status == Status_Op)
+				if (isOnChannel(client))
 					ret += _passwordVal;
 				else
 					ret += "*";
@@ -276,7 +311,8 @@ void Channel::who(Client &client)
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		_server->rpl_WHOREPLY(client, this, *it->first);
+		if (it->second != Status_Invited)
+			_server->rpl_WHOREPLY(client, this, *it->first);
 		it++;
 	}
 }

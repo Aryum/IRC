@@ -148,12 +148,18 @@ void Server::run()
 		for (size_t h = 0; h < _quitingClient.size(); h++)
 			removeData(_quitingClient[h]);
 		_quitingClient.clear();
+		for (size_t h = 0; h < _removeChannel.size(); h++)
+		{
+			std::vector<Channel>::iterator it = std::find(_channels.begin(), _channels.end(), *_removeChannel[h]);
+			if (it != _channels.end())
+				_channels.erase(it);
+		}
+		_removeChannel.clear();
         if (_pollFds[0].revents & POLLIN)
             acceptClients();
     }
 
 }
-
 
 void Server::receiveData(int index)
 {
@@ -177,16 +183,19 @@ void Server::receiveData(int index)
 		std::string line = client->extractLine();
 		std::cout << BLUE << "Message from " << client->get(Name_Nick) << ": " << WHITE << line  << std::endl;
 		call_cmd(*client, line);
+		if (client->isQuiting())
+		{
+			_quitingClient.push_back(index);
+			break;
+		}
 	}
-	if (client->isQuiting())
-		_quitingClient.push_back(index);
-	
 }
 void Server::removeChannel(Channel &channel)
 {
+	std::cout << MAGENTA << "Removing channel " << WHITE << channel.getName()  << std::endl;
 	std::vector<Channel>::iterator it = std::find(_channels.begin(), _channels.end(), channel);
 	if (it != _channels.end())
-		_channels.erase(it);
+		_removeChannel.push_back(&channel);
 }
 
 void Server::removeData(int index)
@@ -194,11 +203,13 @@ void Server::removeData(int index)
     int clientFd = _pollFds[index].fd;
 
     std::map<int, Client*>::iterator it = _clients.find(clientFd);
-
     if (it != _clients.end())
     {
-		removeClientChannels(*it->second);
-        delete it->second;
+		for (size_t i = 0; i < _channels.size(); i++)
+		{
+			if (_channels[i].getClientStatus(*it->second) != Status_None)
+				_channels[i].quitClient(*it->second, "Connection closed");
+		}
         _clients.erase(it);
     }
     close(clientFd);

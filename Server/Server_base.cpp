@@ -10,6 +10,7 @@ Server::Server(int port, const std::string& password) :
 	_channels(),
 	_date(),
 	_quitingClient(),
+	_removeChannel(),
 	_clients(),
 	_cmd()
 {
