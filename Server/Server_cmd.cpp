@@ -133,18 +133,29 @@ void Server::cmd_KICK(Client &client, Args args)
 
 	size_t channelIdx = 0;
 	size_t userIdx = 0;
+	std::vector<Channel *> channels = std::vector<Channel *>();
+	std::vector<Client *> clients = std::vector<Client *>();
+
 	while (channelIdx != std::string::npos)
 	{
 		std::string channelName = nextChar(args[0], channelIdx, ',');
+		Channel *c = getChannel(channelName);
+		if (c != NULL)
+			channels.push_back(c);
+	}
+
+	while (userIdx != std::string::npos)
+	{
 		std::string nickName = nextChar(args[1], userIdx, ',');
-		if (userIdx == std::string::npos && nickName == "")
-			break ;
-		Channel *channel = NULL;
-		Client *user = NULL;
-		//keep kicking until there are no clients
-		if (!getChannel(client, channelName, &channel) || !getClient(client, nickName, &user))
-			continue ; 
-		channel->kickClient(client, *user, args.size() >= 3 ? args[2] : nickName);
+		Client *c = getClient(nickName);
+		if (c != NULL)
+			clients.push_back(c);
+	}
+
+	for (size_t i = 0; i < channels.size(); i++)
+	{
+		for (size_t h = 0; h < clients.size(); h++)
+			channels[i]->kickClient(client, *clients[h], args.size() >= 3 ? args[2] : clients[h]->get(Name_Nick));
 	}
 }
 
