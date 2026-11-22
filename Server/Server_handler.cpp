@@ -151,7 +151,10 @@ void Server::run()
 		_quitingClient.clear();
 		for (size_t h = 0; h < _removeChannel.size(); h++)
 		{
-			std::vector<Channel>::iterator it = std::find(_channels.begin(), _channels.end(), *_removeChannel[h]);
+			Channel *channel = getChannel(_removeChannel[h]);
+			if (channel == NULL)
+				continue ;
+			std::vector<Channel>::iterator it = std::find(_channels.begin(), _channels.end(), *channel);
 			if (it != _channels.end())
 				_channels.erase(it);
 		}
@@ -196,7 +199,7 @@ void Server::removeChannel(Channel &channel)
 	std::cout << MAGENTA << "Removing channel " << WHITE << channel.getName()  << std::endl;
 	std::vector<Channel>::iterator it = std::find(_channels.begin(), _channels.end(), channel);
 	if (it != _channels.end())
-		_removeChannel.push_back(&channel);
+		_removeChannel.push_back(channel.getName());
 }
 
 void Server::removeData(int index)

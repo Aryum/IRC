@@ -102,6 +102,7 @@ void Server::call_cmd(Client &client, std::string input)
 			params.push_back(token);
 	}
 	CmdMap::iterator it = _cmd.find(command);
+	strToUpper(command);
 	if (it == _cmd.end())
 		return err_UNKNOWNCOMMAND(client, command);
 	if (!params.empty())

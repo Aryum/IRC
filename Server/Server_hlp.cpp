@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+
+
 std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 {
 	size_t curIdx;
@@ -26,10 +28,22 @@ std::string nextChar(const std::string &input, size_t &idx, char c)
 	return nextChar(input, idx, c, true);
 }
 
+void strToLower(std::string &str)
+{
+	for (size_t i = 0; i < str.size(); i++)
+		str[i] += (str[i] >= 'A' && str[i] <= '^') * 32;
+}
+
+void strToUpper(std::string &str)
+{
+	for (size_t i = 0; i < str.size(); i++)
+		str[i] -= (str[i] >= 'a' && str[i] <= 'z') * 32;
+}
 Channel *Server::getChannel(std::string name)
 {
 	std::vector<Channel>::iterator it = _channels.begin();
 
+	strToLower(name);
 	while (it != _channels.end())
 	{
 		if (!it->getClientCount() == 0 && it->getName() == name)
@@ -51,6 +65,7 @@ Client *Server::getClient(std::string name)
 {
 	ClientMap::iterator it = _clients.begin();
 
+	strToLower(name);
 	while (it != _clients.end())
 	{
 		if (it->second->get(Name_Nick) == name)

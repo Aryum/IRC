@@ -69,7 +69,7 @@ class Server
 		std::vector<Channel> _channels;
 		std::string _date;
 		std::vector<int> _quitingClient;
-		std::vector<Channel *> _removeChannel;
+		std::vector<std::string> _removeChannel;
 		
 		ClientMap _clients;
 		CmdMap _cmd;
@@ -105,10 +105,10 @@ class Server
 
 };
 
-//move to its own helper file, it contains all the system headers as well
 std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix);
 std::string nextChar(const std::string &input, size_t &idx, char c);
-
+void strToLower(std::string &str);
+void strToUpper(std::string &str);
 
 
 #endif
