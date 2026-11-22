@@ -32,6 +32,7 @@ void Server::setupSocket() //socket
 
 void Server::start()
 {
+    std::signal(SIGPIPE, set_shutDown);
     std::signal(SIGINT, set_shutDown);
     std::signal(SIGTERM, set_shutDown);
     setupSocket();
@@ -200,24 +201,30 @@ void Server::removeChannel(Channel &channel)
 
 void Server::removeData(int index)
 {
-    int clientFd = _pollFds[index].fd;
+	int clientFd = _pollFds[index].fd;
 
-    std::map<int, Client*>::iterator it = _clients.find(clientFd);
-    if (it != _clients.end())
-    {
+
+	std::map<int, Client*>::iterator it = _clients.find(clientFd);
+	if (it != _clients.end())
+	{
+		Client* client = it->second;
 		for (size_t i = 0; i < _channels.size(); i++)
 		{
 			if (_channels[i].getClientStatus(*it->second) != Status_None)
 				_channels[i].quitClient(*it->second, "Connection closed");
 		}
-        _clients.erase(it);
-    }
-    close(clientFd);
+		if (it->second->hasPendingOutput())
+		{
+			const std::string& data = it->second->getOutputBuffer();
+			send(clientFd, data.data(), data.size(), 0); // single try, ignore the result
+		}
+		_clients.erase(it);
+		delete client;
+	}
+	close(clientFd);
 
-    _pollFds.erase(_pollFds.begin() + index);
-
-    std::cout << "Disconnected fd=" << clientFd << std::endl;
-
+	_pollFds.erase(_pollFds.begin() + index);
+	std::cout << "Disconnected fd=" << clientFd << std::endl;
 }
 
 void Server::serverToClient(Client& target, const std::string& message)
