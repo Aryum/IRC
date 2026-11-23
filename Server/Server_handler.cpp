@@ -3,151 +3,160 @@
 
 void Server::setupSocket() //socket 
 {
-    _serverFd = socket(AF_INET, SOCK_STREAM, 0); //creates IPV4 socket
+	_serverFd = socket(AF_INET, SOCK_STREAM, 0); //creates IPV4 socket
 
-    if (_serverFd == -1)
-        throw std::runtime_error("socket failed");
+	if (_serverFd == -1)
+		throw std::runtime_error("socket failed");
 
-    int opt = 1;
+	int opt = 1;
 
-    if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) //SO_REUSEADDR deixa usar o mesmo adress num retsart
-        throw std::runtime_error("setsockopt failed");
+	if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) //SO_REUSEADDR allows to use same adress on restart
+		throw std::runtime_error("setsockopt failed");
 
-    sockaddr_in address = {};
-    address.sin_family = AF_INET; //IPv4
-    address.sin_port = htons(_port); //converts port to network byte order
-    address.sin_addr.s_addr = htonl(INADDR_ANY);//accepts connection on any local network
+	sockaddr_in address = {};
+	address.sin_family = AF_INET; //IPv4
+	address.sin_port = htons(_port); //converts port to network byte order
+	address.sin_addr.s_addr = htonl(INADDR_ANY);//accepts connection on any local network
 
-    if (bind(_serverFd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1) //IP adress and port assigned to the socket
-        throw std::runtime_error("bind failed");
+	if (bind(_serverFd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == -1) //IP adress and port assigned to the socket
+		throw std::runtime_error("bind failed");
 
-    if (listen(_serverFd, SOMAXCONN) == -1) //socket listening for connections
+	if (listen(_serverFd, SOMAXCONN) == -1) //socket listening for connections
 		throw std::runtime_error("listen failed");
 
 	if (fcntl(_serverFd, F_SETFL, O_NONBLOCK) == -1)
-        throw std::runtime_error("fcntl failed");
+		throw std::runtime_error("fcntl failed");
 
-    std::cout << "Server listening on port " << _port << std::endl;
+	std::cout << "Server listening on port " << _port << std::endl;
 }
 
 void Server::start()
 {
-    std::signal(SIGPIPE, set_shutDown);
-    std::signal(SIGINT, set_shutDown);
-    std::signal(SIGTERM, set_shutDown);
-    setupSocket();
+	std::signal(SIGPIPE, set_shutDown);
+	std::signal(SIGINT, set_shutDown);
+	std::signal(SIGTERM, set_shutDown);
+	setupSocket();
 
-    pollfd serverPoll;
-    serverPoll.fd = _serverFd;
-    serverPoll.events = POLLIN;
-    serverPoll.revents = 0;
+	pollfd serverPoll;
+	serverPoll.fd = _serverFd;
+	serverPoll.events = POLLIN;
+	serverPoll.revents = 0;
 
-    _pollFds.push_back(serverPoll);
+	_pollFds.push_back(serverPoll);
 
-    run();
-    shutdownServer();
+	run();
+	shutdownServer();
 }
 
 
 void Server::acceptClients()
 {
-    while (!_shutDownSignal)
-    {
-        sockaddr_in clientAddress;
-        socklen_t clientLength = sizeof(clientAddress);
+	while (!_shutDownSignal)
+	{
+		sockaddr_in clientAddress;
+		socklen_t clientLength = sizeof(clientAddress);
 
-        int clientFd = accept(_serverFd,reinterpret_cast<sockaddr*>(&clientAddress), &clientLength);
+		int clientFd = accept(_serverFd,reinterpret_cast<sockaddr*>(&clientAddress), &clientLength);
 
-        if (clientFd == -1)
-        {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
-                break;
+		if (clientFd == -1)
+		{
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+				break;
 
-            if (errno == EINTR)
-                continue;
+			if (errno == EINTR)
+				continue;
 
-            throw std::runtime_error("accept failed");
-        }
+			throw std::runtime_error("accept failed");
+		}
 
 		if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1)
-        {
-            close(clientFd);
-	        std::cerr << "Error: fcntl client failed" << std::endl;;
+		{
+			close(clientFd);
+			std::cerr << "Error: fcntl client failed" << std::endl;;
 			return;
 		}
 
-        char ipBuffer[INET_ADDRSTRLEN];
-        const char* ip = inet_ntop(AF_INET, &clientAddress.sin_addr, ipBuffer, sizeof(ipBuffer));
+		char ipBuffer[INET_ADDRSTRLEN];
+		const char* ip = inet_ntop(AF_INET, &clientAddress.sin_addr, ipBuffer, sizeof(ipBuffer));
 
-        if (ip == NULL)
-        {
-            close(clientFd);
+		if (ip == NULL)
+		{
+			close(clientFd);
 			std::cerr << "Error: inet_ntop failed" << std::endl;;
 			return;
-        }
+		}
 
-        int clientPort = ntohs(clientAddress.sin_port);
+		int clientPort = ntohs(clientAddress.sin_port);
 
-        Client* client = new Client(clientFd);
-        _clients[clientFd] = client;
+		Client* client = new Client(clientFd);
+		_clients[clientFd] = client;
 
-        pollfd clientPoll;
-        clientPoll.fd = clientFd;
-        clientPoll.events = POLLIN;
-        clientPoll.revents = 0;
+		pollfd clientPoll;
+		clientPoll.fd = clientFd;
+		clientPoll.events = POLLIN;
+		clientPoll.revents = 0;
 
-        _pollFds.push_back(clientPoll);
+		_pollFds.push_back(clientPoll);
 
-        std::cout << "Client connected. fd=" << clientFd  << ", ip=" << ip << ", port=" << clientPort<< std::endl;
-    }
+		std::cout << "Client connected. fd=" << clientFd  << ", ip=" << ip << ", port=" << clientPort<< std::endl;
+	}
 }
 
 void Server::run()
 {
-    while (!_shutDownSignal)
-    {
-        int result = poll(&_pollFds[0], _pollFds.size(), -1);
+	while (!_shutDownSignal)
+	{
+		int result = poll(&_pollFds[0], _pollFds.size(), -1);
 
-        if (result == -1)
-        {
-            if (errno == EINTR)
-                continue;
+		if (result == -1)
+		{
+			if (errno == EINTR)
+				continue;
 
-            throw std::runtime_error("poll failed");
-        }
-        
-        size_t i = _pollFds.size() - 1;
+			throw std::runtime_error("poll failed");
+		}
+		
+		size_t i = _pollFds.size() - 1;
 
-        while (i >= 1)
-        {
-            int clientFd = _pollFds[i].fd;
-            short events = _pollFds[i].revents;
+		while (i >= 1)
+		{
+			int clientFd = _pollFds[i].fd;
+			short events = _pollFds[i].revents;
 
-            if (events & (POLLERR | POLLHUP | POLLNVAL))
-            {
-                removeData(i);
-                --i;
-                continue;
-            }
+			if (events & (POLLERR | POLLHUP | POLLNVAL))
+			{
+				removeData(i);
+				--i;
+				continue;
+			}
 
-            if (events & POLLIN)
-            {
-                receiveData(i);
+			if (events & POLLIN)
+			{
+				receiveData(i);
 				//static_cast<std::vector<pollfd>::size_type>()
-        // receiveData may have removed this client.
-                if (i >= _pollFds.size() || _pollFds[i].fd != clientFd)
-                {
-                    --i;
-                    continue;
-                }
-            }
-            if (events & POLLOUT)
-                sendData(i);
+		// receiveData may have removed this client.
+				if (i >= _pollFds.size() || _pollFds[i].fd != clientFd)
+				{
+					--i;
+					continue;
+				}
+			}
+			if (events & POLLOUT)
+				sendData(i);
 
-            --i;
-        }
+			--i;
+		}
 		for (size_t h = 0; h < _quitingClient.size(); h++)
-			removeData(_quitingClient[h]);
+		{
+			int idx = findPollIndex(_quitingClient[h]);
+			if (idx == -1)
+				continue;
+			Client* c = _clients[_pollFds[idx].fd];
+			if (c->hasPendingOutput())
+				_pollFds[idx].events = POLLOUT;
+			else
+				removeData(idx);
+		}
 		_quitingClient.clear();
 		for (size_t h = 0; h < _removeChannel.size(); h++)
 		{
@@ -159,17 +168,20 @@ void Server::run()
 				_channels.erase(it);
 		}
 		_removeChannel.clear();
-        if (_pollFds[0].revents & POLLIN)
-            acceptClients();
-    }
+		if (_pollFds[0].revents & POLLIN)
+			acceptClients();
+	}
 
 }
 
 void Server::receiveData(int index)
 {
-    char buffer[512];
-    int clientFd = _pollFds[index].fd;
+	char buffer[512];
+	int clientFd = _pollFds[index].fd;
 	Client *client = _clients[clientFd];
+
+	if (client->isQuiting())
+		return;
 	ssize_t bytesReceived = recv(_pollFds[index].fd, buffer, sizeof(buffer), 0);
 
 	if (bytesReceived >= 512)
@@ -189,7 +201,7 @@ void Server::receiveData(int index)
 		call_cmd(*client, line);
 		if (client->isQuiting())
 		{
-			_quitingClient.push_back(index);
+			_quitingClient.push_back(clientFd);
 			break;
 		}
 	}
@@ -206,102 +218,82 @@ void Server::removeData(int index)
 {
 	int clientFd = _pollFds[index].fd;
 
-
 	std::map<int, Client*>::iterator it = _clients.find(clientFd);
 	if (it != _clients.end())
 	{
 		Client* client = it->second;
-		for (size_t i = 0; i < _channels.size(); i++)
-		{
-			if (_channels[i].getClientStatus(*it->second) != Status_None)
-				_channels[i].quitClient(*it->second, "Connection closed");
-		}
-		if (it->second->hasPendingOutput())
-		{
-			const std::string& data = it->second->getOutputBuffer();
-			send(clientFd, data.data(), data.size(), 0); // single try, ignore the result
-		}
 		_clients.erase(it);
 		delete client;
 	}
 	close(clientFd);
-
 	_pollFds.erase(_pollFds.begin() + index);
+
 	std::cout << "Disconnected fd=" << clientFd << std::endl;
 }
 
-void Server::serverToClient(Client& target, const std::string& message)
+int Server::findPollIndex(int fd)
 {
-	std::cout << YELLOW;
-	sendToClient(target, ":IRC", message);
-}
-void Server::clientToClient(Client& target, Client& sender, const std::string& message)
-{
-	std::cout << GREEN; 
-	sendToClient(target, ":" + sender.get(Name_Full), message);
+	for (size_t i = 0; i < _pollFds.size(); ++i)
+		if (_pollFds[i].fd == fd)
+			return (i);
+	return -1;
 }
 
-void Server::sendToClient(Client &client, const std::string& sender, const std::string& message)
-{
-    client.appendOutput(sender + " " + message + "\r\n");
 
-	std::cout << sender << " message to " << client.get(Name_Nick) << ": " << WHITE << message  << std::endl;
 
-    for (std::vector<pollfd>::size_type i = 0; i < _pollFds.size(); ++i)
-    {
-        if (_pollFds[i].fd == client.getSocket())
-        {
-            _pollFds[i].events |= POLLOUT;
-            break;
-        }
-    }
-}
 
 void Server::sendData(int index)
 {
-    int clientFd = _pollFds[index].fd;
+	int clientFd = _pollFds[index].fd;
 
-    std::map<int, Client*>::iterator it = _clients.find(clientFd);
+	std::map<int, Client*>::iterator it = _clients.find(clientFd);
 
-    if (it == _clients.end())
-    {
-        removeData(index);
-        return;
-    }
+	if (it == _clients.end())
+	{
+		removeData(index);
+		return;
+	}
 
-    Client* client = it->second;
+	Client* client = it->second;
 
-    if (client->hasPendingOutput())
-    {
-        const std::string& data = client->getOutputBuffer();
+	if (client->hasPendingOutput())
+	{
+		const std::string& data = client->getOutputBuffer();
 
-        ssize_t bytesSent = send(clientFd, data.data(), data.size(), 0);
+		ssize_t bytesSent = send(clientFd, data.data(), data.size(), 0);
 
 		if (bytesSent <= 0)
 		{
 			removeData(index);
-        	return;
+			return;
 		}
 		client->removeSentOutput(bytesSent);
-    }
+	}
 
 	if (!client->hasPendingOutput())
-    	_pollFds[index].events &= ~POLLOUT;
+	{
+		_pollFds[index].events &= ~POLLOUT;
+		if (client->isQuiting())
+		{
+			removeData(index);
+			return;
+		}
+	}
 }
 
 void Server::shutdownServer()
 {
-    std::cout << "Shutting down server..." << std::endl;
-   
-    while (_pollFds.size() > 1)
-        removeData(_pollFds.size() - 1);
+	std::cout << "Shutting down server..." << std::endl;
 
-    // Close listening socket
-    if (_serverFd != -1)
-    {
-        close(_serverFd);
-        _serverFd = -1;
-    }
+	while (_pollFds.size() > 1)
+		removeData(_pollFds.size() - 1);
 
-    _pollFds.clear();
+	// Close listening socket
+	if (_serverFd != -1)
+	{
+		close(_serverFd);
+		_serverFd = -1;
+	}
+
+	_pollFds.clear();
 }

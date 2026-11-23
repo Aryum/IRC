@@ -43,10 +43,16 @@ void Server::rpl_WHOREPLY(Client &client, Channel *channel, Client &user)
 	serverToClient(client, "352 " + client.get(Name_Nick) + " " + channelName + " " + \
 					user.get(Name_User) + " " + user.get(Name_Host) + " IRC " + user.get(Name_Nick) + " " + \
 					channelStatus + " " + \
-					":0 " + user.get(Name_Real).erase(0, 1));
+					":0 " + user.get(Name_Real));
 }
 
 void Server::rpl_ENDOFWHO(Client &client, std::string query)
 {
 	serverToClient(client, "315 " + client.get(Name_Nick) + " " + query + " :End of WHO list");
+}
+
+void Server::rpl_NAMREPLY(Client &client, std::string channel, std::string names)
+{
+	serverToClient(client, "353 " + client.get(Name_Nick) + " = " + channel + " :"+ names );
+	serverToClient(client, "366 " + client.get(Name_Nick) + " " + channel + " :End of /NAMES list");
 }

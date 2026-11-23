@@ -53,6 +53,7 @@ void Client::setQuiting()
 void Client::cmd_NICK(std::string nick)
 {
 	_nickName = nick;
+	_fullName = _nickName + "!" + _userName + "@" + _hostName;
 	_nickSet = true;
 }
 

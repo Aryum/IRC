@@ -31,7 +31,7 @@ class Channel
 		void joinClient(Client &client, std::string password);
 		void kickClient(Client &op, Client &user, std::string reason);
 		void partClient(Client &client, std::string reason);
-		void quitClient(Client &client, std::string reason);
+		void quitClient(Client &client);
 		void changeTopic(Client &client, std::string topic);
 		void getTopic(Client &client);
 		void removeClient(Client &client);
@@ -50,11 +50,14 @@ class Channel
 		bool _inviteOnly;
 		bool _topicLocked;
 		int _clientCount;
+		int _opCount;
 		int _clientLimit;
 		
+		void sendJoinMessage(Client &client);
+		void setModeRpl(char c, bool adding, std::string val, std::string &options, std::string &values);
 		void updateMode(char c, bool adding);
 		bool consumeArg(Client &client, Args args, size_t &cur, std::string &out);
-		void toggleOp(Client &client, std::string tarName, bool on);
+		bool toggleOp(Client &client, std::string tarName, bool on);
 		bool test_senderOnChannel(Client &c);
 		bool test_isOperator(Client &c);
 		bool test_canInvite(Client &c);

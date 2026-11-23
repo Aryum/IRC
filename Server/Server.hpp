@@ -58,6 +58,7 @@ class Server
 		void rpl_TOPIC(Client &client, std::string channel,std::string topic);
 		void rpl_WHOREPLY(Client &client, Channel *channel, Client &user);
 		void rpl_ENDOFWHO(Client &client, std::string query);
+		void rpl_NAMREPLY(Client &client, std::string channel, std::string names);
 		
 
 	private:
@@ -90,9 +91,10 @@ class Server
 
 		
 		void sendToClient(Client &client, const std::string& sender, const std::string& message);
+		void clientToPeers(Client& sender, const std::string& message);
 		static void set_shutDown(int signal);
-		void remove_trailing(std::string cmd, std::string &last);
 		bool allowed_command(Client &client, std::string cmd);
+		int findPollIndex(int fd);
 
 
 
@@ -102,13 +104,16 @@ class Server
 		bool getChannel(Client &client, std::string name, Channel **out);
 		Channel *getChannel(std::string name);
 		Client *getClient(std::string name);
+		void quitClient(Client & client, std::string reason);
+
+
 
 };
 
 std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix);
 std::string nextChar(const std::string &input, size_t &idx, char c);
-void strToLower(std::string &str);
-void strToUpper(std::string &str);
+std::string strToLower(std::string str);
+std::string strToUpper(std::string str);
 
 
 #endif

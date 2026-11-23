@@ -49,7 +49,7 @@ bool Server::allowed_command(Client &client, std::string cmd)
 {
 	if (client.isRegistred())
 		return true;
-	std::string options[] = { "PASS", "USER", "NICK", "" };
+	std::string options[] = { "PASS", "USER", "NICK", "QUIT", "" };
 	for (int i = 0; options[i] != ""; i++)
 	{
 		if (cmd == options[i])
@@ -58,23 +58,11 @@ bool Server::allowed_command(Client &client, std::string cmd)
 	return false;
 }
 
-void Server::remove_trailing(std::string cmd, std::string &last)
-{
-	std::string options[] = {"JOIN", "MODE", "PRIVMSG", "" };
-
-	for (int i = 0; options[i] != ""; i++)
-	{
-		if (cmd == options[i])
-		{
-			if (last[0] == ':')
-				last.erase(0, 1);
-			return ;
-		}
-	}
-}
 
 void Server::call_cmd(Client &client, std::string input)
 {
+	if (input.size() == 0)
+		return ;
 	size_t spaceIdx = 0;
 	std::string command = "";
 	std::vector<std::string> params = std::vector<std::string>();
@@ -101,12 +89,15 @@ void Server::call_cmd(Client &client, std::string input)
 		else if (!token.empty())
 			params.push_back(token);
 	}
+	command = strToUpper(command);
 	CmdMap::iterator it = _cmd.find(command);
-	strToUpper(command);
 	if (it == _cmd.end())
 		return err_UNKNOWNCOMMAND(client, command);
 	if (!params.empty())
-		remove_trailing(command, params[params.size() - 1]);
+	{
+		if (params[params.size() - 1][0] == ':')
+			params[params.size() - 1].erase(0, 1);
+	}
 	std::cout << GREEN << "	Command:" << WHITE << std::endl;
 	std::cout << "		" << command << std::endl;
 	std::cout << MAGENTA << "	Params: " << WHITE << std::endl;

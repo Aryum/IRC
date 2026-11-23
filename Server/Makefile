@@ -4,6 +4,7 @@ SRC :=	Server_base.cpp		\
 		Server_cmd.cpp		\
 		Server_err.cpp		\
 		Server_handler.cpp	\
+		Server_msg.cpp		\
 		Server_hlp.cpp		\
 		Server_reply.cpp	\
 

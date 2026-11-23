@@ -40,16 +40,19 @@ void Server::cmd_NICK(Client &client, Args args)
 	ClientMap::iterator it = _clients.begin();
 	while (it != _clients.end())
 	{
-		if (it->second->get(Name_Nick) == args[0])
+		if (it->second != &client && it->second->get(Name_Nick) == args[0])
 			return err_NICKNAMEINUSE(client, args[0]);
 		it++;
 	}
+
+	if (client.get(Name_Nick) != "*")
+	{
+		clientToClient(client, client, "NICK :" + args[0]);
+		clientToPeers(client, "NICK :" + args[0]);
+	}
 	client.cmd_NICK(args[0]);
 	if (client.isRegistred() && !client.isWelcome())
-	{
-		_clients.insert(std::make_pair(client.getSocket(), &client));
 		rpl_WELCOME(client, _date);
-	}
 }
 
 void Server::cmd_USER(Client &client, Args args)
@@ -70,11 +73,7 @@ void Server::cmd_QUIT(Client &client, Args args)
 		reason = args[0];
 	else
 		reason = "Quit";
-	for (size_t i = 0; i < _channels.size(); i++)
-	{
-		if (_channels[i].isOnChannel(client))
-			_channels[i].quitClient(client, reason);
-	}
+	quitClient(client, reason);
 	client.setQuiting();
 }
 
@@ -120,7 +119,7 @@ void Server::cmd_PART(Client &client, Args args)
 		std::string name = nextChar(args[0], channelIdx, ',');
 		Channel *channel = NULL;
 		if (!getChannel(client, name, &channel))
-			return ;
+			continue ;
 		else
 			channel->partClient(client, args.size() < 2 ? "" : args[1]);
 	}
@@ -139,16 +138,17 @@ void Server::cmd_KICK(Client &client, Args args)
 	while (channelIdx != std::string::npos)
 	{
 		std::string channelName = nextChar(args[0], channelIdx, ',');
-		Channel *c = getChannel(channelName);
-		if (c != NULL)
+
+		Channel *c =  NULL; 
+		if (getChannel(client, channelName, &c))
 			channels.push_back(c);
 	}
 
 	while (userIdx != std::string::npos)
 	{
 		std::string nickName = nextChar(args[1], userIdx, ',');
-		Client *c = getClient(nickName);
-		if (c != NULL)
+		Client *c = NULL;
+		if (getClient(client, nickName, &c))
 			clients.push_back(c);
 	}
 
@@ -207,7 +207,7 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 		else
 			return err_NOTEXTTOSEND(client);
 	}
-	if (args[1].size() == 1 && args[0][1] == ':')
+	if (args[1].size() == 0)
 		return err_NOTEXTTOSEND(client);
 
 	size_t targetIdx = 0;
@@ -217,10 +217,13 @@ void Server::cmd_PRIVMSG(Client &client, Args args)
 		Client *tarClient = NULL;
 
 		std::string receiver = nextChar(args[0], targetIdx, ',');
-		if (parseChannel(receiver) && getChannel(client, receiver, &tarChannel))
-			tarChannel->broadcastMessage(client, "PRIVMSG",args[1], false);
+		if (parseChannel(receiver))
+		{
+			if (getChannel(client, receiver, &tarChannel))
+				tarChannel->broadcastMessage(client, "PRIVMSG", args[1], false);
+		} 
 		else if (getClient(client, receiver, &tarClient))
-			clientToClient(*tarClient, client, "PRIVMSG " + client.get(Name_Nick) + " " + args[1]);
+			clientToClient(*tarClient, client, "PRIVMSG " + tarClient->get(Name_Nick) + " " + args[1]);
 	}
 }
 
@@ -232,7 +235,8 @@ void Server::cmd_WHO(Client &client, Args args)
 		ClientMap::iterator it = _clients.begin();
 		while (it != _clients.end())
 		{
-			rpl_WHOREPLY(client, NULL, *it->second);
+			if (it->second->isRegistred())
+				rpl_WHOREPLY(client, NULL, *it->second);
 			it++;
 		}
 		return rpl_ENDOFWHO(client, "*");

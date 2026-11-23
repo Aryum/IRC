@@ -10,12 +10,13 @@ Channel::Channel(Server* server, Client &client, std::string &name) :
 	_inviteOnly(false),
 	_topicLocked(false),
 	_clientCount(1),
+	_opCount(1),
 	_clientLimit(-1)
 {
 	std::cout << MAGENTA << "Creating channel " << WHITE << _name  << std::endl;
 	_clients.insert(std::make_pair(&client, Status_Op));
 	_server->clientToClient(client, client, "JOIN " + _name);
-	getTopic(client);
+	sendJoinMessage(client);
 }
 
 bool Channel::operator==(const Channel &other) const
@@ -38,6 +39,25 @@ ClientChannelStatus Channel::getClientStatus( Client &client)
 	if (it != _clients.end())
 		return it->second;
 	return Status_None;
+}
+void Channel::sendJoinMessage(Client &client)
+{
+	getTopic(client);
+
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	std::string clientNames = "";
+	while (it != _clients.end())
+	{
+		if (it->second == Status_Invited)
+			continue ;
+		if(it != _clients.begin())
+			clientNames += " ";
+		if (it->second == Status_Op)
+			clientNames += "@";
+		clientNames += it->first->get(Name_Nick);
+		it++;
+	}
+	_server->rpl_NAMREPLY(client, _name, clientNames);
 }
 
 void Channel::joinClient(Client &client, std::string password)
@@ -64,8 +84,7 @@ void Channel::joinClient(Client &client, std::string password)
 			_server->clientToClient(*it->first, client, "JOIN " + _name);
 		it++;
 	}
-	getTopic(client);
-
+	sendJoinMessage(client);
 }
 
 void Channel::removeClient(Client &client)
@@ -79,6 +98,9 @@ void Channel::removeClient(Client &client)
 		return _server->removeChannel(*this);
 	if (status != Status_Op)
 		return ;
+	_opCount--;
+	if (_opCount != 0)
+		return ;
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
 	std::map<Client*, ClientChannelStatus>::iterator nextOp = _clients.end();
 	while (it != _clients.end())
@@ -89,25 +111,17 @@ void Channel::removeClient(Client &client)
 			nextOp = it;
 		it++;
 	}
-	broadcastMessage(*nextOp->first, "PRIVMSG", "is now op", true);
+	broadcastMessage(*nextOp->first, "MODE", "+o " + nextOp->first->get(Name_Nick), true);
 	nextOp->second = Status_Op;
+	_opCount++;
 }
 
-void Channel::quitClient(Client &client, std::string reason)
+void Channel::quitClient(Client &client)
 {
 	if (getClientStatus(client) == Status_Invited)
 	{
 		_clients.erase(&client);
 		return ;
-	}
-	if(reason[0] != ':')
-		reason.insert(0, ":");
-	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
-	while (it != _clients.end())
-	{
-		if (it->second != Status_Invited)
-			_server->clientToClient(*it->first, client, "QUIT " + reason);
-		it++;
 	}
 	removeClient(client);
 }
@@ -168,26 +182,49 @@ bool Channel::consumeArg(Client &client, Args args, size_t &cur, std::string &ou
 	return true;
 }
 
-void Channel::toggleOp(Client &client, std::string tarName, bool on)
+bool Channel::toggleOp(Client &client, std::string tarName, bool on)
 {
+	if (!on && _opCount == 1)
+		return false;
 	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	std::string cmp = strToLower(tarName);
 	while (it != _clients.end())
 	{
-		if (it->first->get(Name_Nick) == tarName)
+		if (strToLower(it->first->get(Name_Nick)) == cmp)
 		{
 			if (it->second == Status_Invited)
 				break ;
 			it->second = on ? Status_Op : Status_Connected;
-			return ;
+			_opCount += 1 * (on ? 1 : -1);
+			return true;
 		}
 		it++;
 	}
-	_server->err_USERNOTINCHANNEL(client, tarName, _name);
+	return (_server->err_USERNOTINCHANNEL(client, tarName, _name), false);
 }
 
+void Channel::setModeRpl(char c, bool adding, std::string val, std::string &options, std::string &values)
+{
+	size_t sign = options.find_last_of("+-");
+	if (sign == std::string::npos)
+		options += adding ? '+' : '-';
+	else
+	{
+		char curMode = options[sign];
+		if (curMode == '-' && adding)
+			options += '+';
+		if (curMode == '+' && !adding)
+			options += '-';
+	}
+	options += c;
+
+	if ((adding || c == 'o') && val != "")
+		values += (values.size() != 0 ? " " : "") + val;
+}
 void Channel::updateMode(char c, bool adding)
 {
 	size_t pos = _mode.find(c);
+	
 	if (adding)
 	{
 		if (pos == std::string::npos)
@@ -197,6 +234,17 @@ void Channel::updateMode(char c, bool adding)
 		_mode.erase(pos, 1);
 }
 
+static bool extractNumber(std::string &str, int &result)
+{
+	if (str.size() > 10)
+		return false;
+	char *end;
+	long value = std::strtol(str.c_str(), &end, 10);
+	if (value > INT_MAX || value <= 0 || end == str.c_str() || *end != '\0')
+		return false;
+	result = static_cast<int>(value);
+	return true;
+}
 void Channel::changeMode(Client &client, Args args)
 {
 	if (!test_isOperator(client))
@@ -204,6 +252,8 @@ void Channel::changeMode(Client &client, Args args)
 	bool adding = true;
 	int limit = 0;
 	size_t curParam = 2;
+	std::string options = std::string();
+	std::string values = std::string();
 	for (size_t i = 0; args[1][i] != '\0'; i++)
 	{
 		if (args[1][i] == '+' || args[1][i] == '-')
@@ -211,16 +261,18 @@ void Channel::changeMode(Client &client, Args args)
 			adding = args[1][i] == '+';
 			continue ;
 		}
-		std::string var;
+		std::string var = std::string();
 		switch (args[1][i])
 		{
 			case 'i':
 				_inviteOnly = adding;
 				updateMode(args[1][i], adding);
+				setModeRpl(args[1][i], adding, "", options, values);
 				break;
 			case 't':
 				_topicLocked = adding;
 				updateMode(args[1][i], adding);
+				setModeRpl(args[1][i], adding, "", options, values);
 				break;
 			case 'k':
 				if (adding)
@@ -238,31 +290,31 @@ void Channel::changeMode(Client &client, Args args)
 				else
 					_passwordVal = "";
 				updateMode(args[1][i], adding);
+				setModeRpl(args[1][i], adding, _passwordVal, options, values);
 				break;
 			case 'o':
-				if (consumeArg(client, args, curParam, var))
-					toggleOp(client, var, adding);
+				if (consumeArg(client, args, curParam, var) && toggleOp(client, var, adding))
+					setModeRpl(args[1][i], adding, var, options, values);
 				break;
 			case 'l':
 				if (adding)
 				{
-					if (!consumeArg(client, args, curParam, var))
+					if (!consumeArg(client, args, curParam, var) || !extractNumber(var, limit))
 						break ;
-					limit = atoi(var.c_str());
-					if (limit <= 0)
-						break;
-					_clientLimit = limit;
 				}
 				else
 					_clientLimit = -1;
+				var = _clientLimit != -1 ? var : "";
 				updateMode(args[1][i], adding);
+				setModeRpl(args[1][i], adding, var, options, values);
 				break;
 			default:
 				_server->err_UNKNOWNMODE(client, args[1][i]);
 				break;
-
 		}
 	}
+	if (!options.empty())
+		broadcastMessage(client, "MODE", options + " " + values, true);
 }
 
 void Channel::broadcastMessage(Client &client, std::string cmd, std::string message, bool sendSender)

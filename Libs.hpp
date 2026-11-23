@@ -3,6 +3,7 @@
 
 #include <poll.h>
 #include <sys/socket.h>
+#include <climits>
 #include <vector>
 #include <string>
 #include <map>

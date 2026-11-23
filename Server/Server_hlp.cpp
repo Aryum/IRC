@@ -1,7 +1,5 @@
 #include "Server.hpp"
 
-
-
 std::string nextChar(const std::string &input, size_t &idx, char c, bool prefix)
 {
 	size_t curIdx;
@@ -28,26 +26,31 @@ std::string nextChar(const std::string &input, size_t &idx, char c)
 	return nextChar(input, idx, c, true);
 }
 
-void strToLower(std::string &str)
+std::string strToLower(std::string str)
 {
 	for (size_t i = 0; i < str.size(); i++)
 		str[i] += (str[i] >= 'A' && str[i] <= '^') * 32;
+	return str;
 }
 
-void strToUpper(std::string &str)
+std::string strToUpper(std::string str)
 {
 	for (size_t i = 0; i < str.size(); i++)
 		str[i] -= (str[i] >= 'a' && str[i] <= 'z') * 32;
+	return str;
 }
 Channel *Server::getChannel(std::string name)
 {
 	std::vector<Channel>::iterator it = _channels.begin();
 
-	strToLower(name);
+	name = strToLower(name);
 	while (it != _channels.end())
 	{
-		if (!it->getClientCount() == 0 && it->getName() == name)
-			return &(*it);
+		if (!it->getClientCount() == 0)
+		{
+			if(strToLower(it->getName()) == name)
+				return &(*it);
+		} 
 		it++;
 	}
 	return NULL;
@@ -68,7 +71,7 @@ Client *Server::getClient(std::string name)
 	strToLower(name);
 	while (it != _clients.end())
 	{
-		if (it->second->get(Name_Nick) == name)
+		if (strToLower(it->second->get(Name_Nick)) == name)
 			return it->second;
 		it++;
 	}
@@ -81,4 +84,14 @@ bool Server::getClient(Client &client, std::string name, Client **out)
 	if (*out == NULL)
 		err_NOSUCHNICK(client, name);
 	return (*out != NULL);
+}
+
+void Server::quitClient(Client & client, std::string reason)
+{
+	clientToPeers(client, "QUIT :" + reason);
+	for (size_t i = 0; i < _channels.size(); i++)
+	{
+		if (_channels[i].isOnChannel(client))
+			_channels[i].quitClient(client);
+	}
 }
