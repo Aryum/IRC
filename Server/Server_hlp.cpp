@@ -68,7 +68,7 @@ Client *Server::getClient(std::string name)
 {
 	ClientMap::iterator it = _clients.begin();
 
-	strToLower(name);
+	name = strToLower(name);
 	while (it != _clients.end())
 	{
 		if (strToLower(it->second->get(Name_Nick)) == name)

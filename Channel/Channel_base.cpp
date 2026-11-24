@@ -21,7 +21,7 @@ Channel::Channel(Server* server, Client &client, std::string &name) :
 
 bool Channel::operator==(const Channel &other) const
 {
-	return _name == other._name;
+	return strToLower(_name) == strToLower(other._name);
 }
 
 std::string Channel::getName()
@@ -33,11 +33,16 @@ int Channel::getClientCount()
 {
 	return _clientCount;
 }
-ClientChannelStatus Channel::getClientStatus( Client &client)
+ClientChannelStatus Channel::getClientStatus(Client &client)
 {
-	std::map<Client*, ClientChannelStatus>::iterator it = _clients.find(&client);
-	if (it != _clients.end())
-		return it->second;
+	std::map<Client*, ClientChannelStatus>::iterator it = _clients.begin();
+	std::string tarName = strToLower(client.get(Name_Nick));
+	while (it != _clients.end())
+	{
+		if (strToLower(it->first->get(Name_Nick)) == tarName)
+			return it->second;
+		it++;
+	}
 	return Status_None;
 }
 void Channel::sendJoinMessage(Client &client)
@@ -301,10 +306,11 @@ void Channel::changeMode(Client &client, Args args)
 				{
 					if (!consumeArg(client, args, curParam, var) || !extractNumber(var, limit))
 						break ;
+					_clientLimit = limit;
 				}
 				else
 					_clientLimit = -1;
-				var = _clientLimit != -1 ? var : "";
+				var = (_clientLimit != -1 ? var : "");
 				updateMode(args[1][i], adding);
 				setModeRpl(args[1][i], adding, var, options, values);
 				break;
