@@ -21,7 +21,6 @@ class Channel
 		Channel(Server* server, Client &client, std::string &name);
 		bool operator==(const Channel &other) const;
 
-
 		std::string getName();
 		int getClientCount();
 

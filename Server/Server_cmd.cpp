@@ -164,8 +164,8 @@ void Server::cmd_INVITE(Client &client, Args args)
 	if (args.size() < 2)
 		return err_NEEDMOREPARAMS(client, "INVITE");
 	Client *user = NULL;
-	Channel *channel = getChannel(args[1]);
-	if (!getClient(client, args[0], &user) || channel == NULL)
+	Channel *channel = NULL;
+	if (!getClient(client, args[0], &user) || !getChannel(client, args[1], &channel))
 		return ; 
 	channel->inviteClient(client, *user);
 }
