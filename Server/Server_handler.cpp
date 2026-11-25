@@ -32,7 +32,7 @@ void Server::setupSocket() //socket
 
 void Server::start()
 {
-	std::signal(SIGPIPE, set_shutDown);
+	std::signal(SIGPIPE, SIG_IGN);
 	std::signal(SIGINT, set_shutDown);
 	std::signal(SIGTERM, set_shutDown);
 	setupSocket();
@@ -223,6 +223,8 @@ void Server::removeData(int index)
 	{
 		Client* client = it->second;
 		_clients.erase(it);
+		if (!client->isQuiting())
+			quitClient(*client, "Connection closed");
 		delete client;
 	}
 	close(clientFd);
