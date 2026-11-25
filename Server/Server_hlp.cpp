@@ -46,7 +46,7 @@ Channel *Server::getChannel(std::string name)
 	name = strToLower(name);
 	while (it != _channels.end())
 	{
-		if (!it->getClientCount() == 0)
+		if (it->getClientCount() != 0)
 		{
 			if(strToLower(it->getName()) == name)
 				return &(*it);
